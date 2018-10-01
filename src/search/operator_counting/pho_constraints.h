@@ -23,7 +23,7 @@ class PhOConstraints : public ConstraintGenerator {
     std::shared_ptr<pdbs::PDBCollection> pdbs;
 public:
     explicit PhOConstraints(const options::Options &opts);
-    ~PhOConstraints() = default;
+    virtual ~PhOConstraints() = default;
 
     virtual void initialize_constraints(
         const std::shared_ptr<AbstractTask> &task,

@@ -18,6 +18,7 @@ public:
     // Transitional method, used until the search is switched to the new task interface.
     virtual void generate_applicable_ops(
         const GlobalState &state, std::vector<OperatorID> &applicable_ops) const = 0;
+    virtual ~GeneratorBase() {}
 };
 
 class GeneratorForkBinary : public GeneratorBase {

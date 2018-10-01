@@ -19,6 +19,7 @@ public:
         double infinity) override;
     virtual bool update_constraints(const State &state,
                                     lp::LPSolver &lp_solver) override;
+    virtual ~LMCutConstraints() {}
 };
 }
 
