@@ -71,6 +71,12 @@ def compute_necessary_axiom_literals(axioms_by_atom, operators, goal):
     necessary_literals = set()
     queue = []
 
+    def skip_literals(literals):
+        for literal in literals:
+            if isinstance(literal, pddl.Truth):
+                return True
+        return False
+
     def register_literals(literals, negated):
         for literal in literals:
             if literal.positive() in axioms_by_atom:   # This is an axiom literal
@@ -81,7 +87,9 @@ def compute_necessary_axiom_literals(axioms_by_atom, operators, goal):
                     queue.append(literal)
 
     # Initialize queue with axioms required for goal and operators.
-    register_literals(goal, False)
+    if not skip_literals(goal):
+        register_literals(goal, False)
+
     for op in operators:
         register_literals(op.precondition, False)
         for (cond, _) in op.add_effects:

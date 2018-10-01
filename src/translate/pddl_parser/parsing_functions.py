@@ -306,7 +306,7 @@ def parse_axiom(alist, type_dict, predicate_dict):
 def parse_task(domain_pddl, task_pddl):
     domain_name, domain_requirements, types, type_dict, constants, predicates, predicate_dict, functions, actions, axioms \
                  = parse_domain_pddl(domain_pddl)
-    task_name, task_domain_name, task_requirements, objects, init, goal, use_metric = parse_task_pddl(task_pddl, type_dict, predicate_dict)
+    task_name, task_domain_name, task_requirements, objects, init, goal, utility, bound, use_metric = parse_task_pddl(task_pddl, type_dict, predicate_dict)
 
     assert domain_name == task_domain_name
     requirements = pddl.Requirements(sorted(set(
@@ -321,7 +321,7 @@ def parse_task(domain_pddl, task_pddl):
 
     return pddl.Task(
         domain_name, task_name, requirements, types, objects,
-        predicates, functions, init, goal, actions, axioms, use_metric)
+        predicates, functions, init, goal, utility, bound, actions, axioms, use_metric)
 
 
 def parse_domain_pddl(domain_pddl):
@@ -471,13 +471,34 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
     yield initial
 
     goal = next(iterator)
-    assert goal[0] == ":goal" and len(goal) == 2
-    yield parse_condition(goal[1], type_dict, predicate_dict)
+    goal_cond = pddl.Truth()
+
+    if goal[0] == ":goal":
+        if len(goal) == 2:
+            goal_cond = parse_condition(goal[1], type_dict, predicate_dict)
+        utility = next(iterator)
+    else:
+        utility = goal
+
+    yield goal_cond
+
+    assert utility[0] == ":utility"
+    utility_list = []
+    for fact in utility[1:]:
+        assert fact[0] == "="
+        utility_atom = pddl.Atom(fact[1][0], fact[1][1:])
+        utility_value = fact[2]
+        utility_list.append((utility_atom, utility_value))
+    yield utility_list
+
+    bound = next(iterator)
+    assert bound[0] == ":bound" and len(bound) == 2
+    yield bound[1]
 
     use_metric = False
     for entry in iterator:
         if entry[0] == ":metric":
-            if entry[1]=="minimize" and entry[2][0] == "total-cost":
+            if entry[1]=="maximize" and entry[2][0] == "total-utility":
                 use_metric = True
             else:
                 assert False, "Unknown metric."

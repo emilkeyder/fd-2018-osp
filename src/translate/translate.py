@@ -409,7 +409,7 @@ def translate_strips_axioms(axioms, strips_to_sas, ranges, mutex_dict,
     return result
 
 
-def dump_task(init, goals, actions, axioms, axiom_layer_dict):
+def dump_task(init, goals, utils, bound, actions, axioms, axiom_layer_dict):
     old_stdout = sys.stdout
     with open("output.dump", "w") as dump_file:
         sys.stdout = dump_file
@@ -420,6 +420,11 @@ def dump_task(init, goals, actions, axioms, axiom_layer_dict):
         print("Goals")
         for goal in goals:
             print(goal)
+        print("Utils")
+        for util in utils:
+            print(util)
+        print("Bound")
+        print("  %s" % bound)
         for action in actions:
             print()
             print("Action")
@@ -434,10 +439,15 @@ def dump_task(init, goals, actions, axioms, axiom_layer_dict):
             print("%s: layer %d" % (atom, layer))
     sys.stdout = old_stdout
 
+def skip_goal(goals):
+    for goal in goals:
+        if isinstance(goal, pddl.Truth):
+            return True
+    return False
 
 def translate_task(strips_to_sas, ranges, translation_key,
                    mutex_dict, mutex_ranges, mutex_key,
-                   init, goals,
+                   init, goals, utilities, bound,
                    actions, axioms, metric, implied_facts):
     with timers.timing("Processing axioms", block=True):
         axioms, axiom_init, axiom_layer_dict = axiom_rules.handle_axioms(
@@ -450,7 +460,7 @@ def translate_task(strips_to_sas, ranges, translation_key,
     if options.dump_task:
         # Remove init facts that don't occur in strips_to_sas: they're constant.
         nonconstant_init = filter(strips_to_sas.get, init)
-        dump_task(nonconstant_init, goals, actions, axioms, axiom_layer_dict)
+        dump_task(nonconstant_init, goals, utilities, bound, actions, axioms, axiom_layer_dict)
 
     init_values = [rang - 1 for rang in ranges]
     # Closed World Assumption: Initialize to "range - 1" == Nothing.
@@ -463,24 +473,36 @@ def translate_task(strips_to_sas, ranges, translation_key,
             init_values[var] = val
     init = sas_tasks.SASInit(init_values)
 
-    goal_dict_list = translate_strips_conditions(goals, strips_to_sas, ranges,
-                                                 mutex_dict, mutex_ranges)
-    if goal_dict_list is None:
-        # "None" is a signal that the goal is unreachable because it
-        # violates a mutex.
-        return unsolvable_sas_task("Goal violates a mutex")
+    if skip_goal(goals):
+        goal = sas_tasks.SASGoal([])
+    else:
+        goal_dict_list = translate_strips_conditions(goals, strips_to_sas, ranges,
+                                                      mutex_dict, mutex_ranges)
 
-    assert len(goal_dict_list) == 1, "Negative goal not supported"
+        if goal_dict_list is None:
+            # "None" is a signal that the goal is unreachable because it
+            # violates a mutex.
+            return unsolvable_sas_task("Goal violates a mutex")
+
+        assert len(goal_dict_list) == 1, "Negative goal not supported"
     ## we could substitute the negative goal literal in
     ## normalize.substitute_complicated_goal, using an axiom. We currently
     ## don't do this, because we don't run into this assertion, if the
     ## negative goal is part of finite domain variable with only two
     ## values, which is most of the time the case, and hence refrain from
     ## introducing axioms (that are not supported by all heuristics)
-    goal_pairs = list(goal_dict_list[0].items())
-    if not goal_pairs:
-        return solvable_sas_task("Empty goal")
-    goal = sas_tasks.SASGoal(goal_pairs)
+        goal_pairs = list(goal_dict_list[0].items())
+        if not goal_pairs:
+            return solvable_sas_task("Empty goal")
+        goal = sas_tasks.SASGoal(goal_pairs)
+
+    util_values = []
+    for fact, uval in utilities:
+        pairs = strips_to_sas.get(fact, [])
+        for var, val in pairs:
+            util_values.append((var, val, int(uval)))  
+
+    util = sas_tasks.SASUtil(util_values)
 
     operators = translate_strips_operators(actions, strips_to_sas, ranges,
                                            mutex_dict, mutex_ranges,
@@ -495,7 +517,7 @@ def translate_task(strips_to_sas, ranges, translation_key,
         axiom_layers[var] = layer
     variables = sas_tasks.SASVariables(ranges, axiom_layers, translation_key)
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
-    return sas_tasks.SASTask(variables, mutexes, init, goal,
+    return sas_tasks.SASTask(variables, mutexes, init, goal, util, int(bound),
                              operators, axioms, metric)
 
 
@@ -510,13 +532,17 @@ def trivial_task(solvable):
     init = sas_tasks.SASInit([0])
     if solvable:
         goal_fact = (0, 0)
+        util_fact = (0, 0, 1)
     else:
         goal_fact = (0, 1)
+        util_fact = (0, 1, 1)
     goal = sas_tasks.SASGoal([goal_fact])
+    util = sas_tasks.SASUtil([util_fact])
+    bound = 1
     operators = []
     axioms = []
     metric = True
-    return sas_tasks.SASTask(variables, mutexes, init, goal,
+    return sas_tasks.SASTask(variables, mutexes, init, goal, util, bound,
                              operators, axioms, metric)
 
 def solvable_sas_task(msg):
@@ -540,8 +566,10 @@ def pddl_to_sas(task):
         goal_list = task.goal.parts
     else:
         goal_list = [task.goal]
-    for item in goal_list:
-        assert isinstance(item, pddl.Literal)
+
+    if not isinstance(task.goal, pddl.Truth):
+        for item in goal_list:
+            assert isinstance(item, pddl.Literal)
 
     with timers.timing("Computing fact groups", block=True):
         groups, mutex_groups, translation_key = fact_groups.compute_groups(
@@ -569,7 +597,7 @@ def pddl_to_sas(task):
         sas_task = translate_task(
             strips_to_sas, ranges, translation_key,
             mutex_dict, mutex_ranges, mutex_key,
-            task.init, goal_list, actions, axioms, task.use_min_cost_metric,
+            task.init, goal_list, task.utility, task.bound, actions, axioms, task.use_min_cost_metric,
             implied_facts)
 
     print("%d effect conditions simplified" %
@@ -586,11 +614,16 @@ def pddl_to_sas(task):
             except simplify.TriviallySolvable:
                 return solvable_sas_task("Simplified to empty goal")
 
+    filter_unimportant_vars = options.filter_unimportant_vars    
+    if isinstance(task.goal, pddl.Truth):
+        filter_unimportant_vars = False
+
+
     if options.reorder_variables or options.filter_unimportant_vars:
         with timers.timing("Reordering and filtering variables", block=True):
             variable_order.find_and_apply_variable_order(
                 sas_task, options.reorder_variables,
-                options.filter_unimportant_vars)
+                filter_unimportant_vars)
 
     return sas_task
 
@@ -662,6 +695,7 @@ def dump_statistics(sas_task):
                 if layer >= 0])))
     print("Translator facts: %d" % sum(sas_task.variables.ranges))
     print("Translator goal facts: %d" % len(sas_task.goal.pairs))
+    print("Translator utility facts: %d" % len(sas_task.utility.triplets))
     print("Translator mutex groups: %d" % len(sas_task.mutexes))
     print(("Translator total mutex groups size: %d" %
            sum(mutex.get_encoding_size() for mutex in sas_task.mutexes)))
