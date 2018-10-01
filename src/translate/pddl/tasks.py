@@ -7,6 +7,7 @@ from . import predicates
 class Task(object):
     def __init__(self, domain_name, task_name, requirements,
                  types, objects, predicates, functions, init, goal,
+                 utility, bound,
                  actions, axioms, use_metric):
         self.domain_name = domain_name
         self.task_name = task_name
@@ -17,6 +18,8 @@ class Task(object):
         self.functions = functions
         self.init = init
         self.goal = goal
+        self.utility = utility
+        self.bound = bound
         self.actions = actions
         self.axioms = axioms
         self.axiom_counter = 0
@@ -50,6 +53,10 @@ class Task(object):
             print("  %s" % fact)
         print("Goal:")
         self.goal.dump()
+        print("Utility:")
+        self.utility.dump()
+        print("Bound:")
+        print("  %d" % self.bound)
         print("Actions:")
         for action in self.actions:
             action.dump()
