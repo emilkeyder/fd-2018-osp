@@ -37,6 +37,7 @@ public:
                                         std::vector<lp::LPConstraint> &constraints,
                                         double infinity);
     virtual bool update_constraints(const State &state, lp::LPSolver &lp_solver);
+    virtual ~StateEquationConstraints() {}
 };
 }
 

@@ -228,6 +228,8 @@ public:
             : registry(registry), pos(start) {}
 public:
         const_iterator &operator++() {
+	    // Prevent unused field error. 
+	    (void) registry;
             ++pos.value;
             return *this;
         }
