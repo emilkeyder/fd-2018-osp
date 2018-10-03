@@ -540,6 +540,7 @@ fast_downward_plugin(
         tasks/domain_abstracted_task_factory
         tasks/modified_goals_task
         tasks/modified_operator_costs_task
+        tasks/osp_utility_to_cost_task
     DEPENDS TASK_PROPERTIES
     DEPENDENCY_ONLY
 )
