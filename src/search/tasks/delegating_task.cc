@@ -39,6 +39,10 @@ int DelegatingTask::get_operator_cost(int index, bool is_axiom) const {
     return parent->get_operator_cost(index, is_axiom);
 }
 
+int DelegatingTask::get_bounded_operator_cost(int index, bool is_axiom) const {
+    return parent->get_bounded_operator_cost(index, is_axiom);
+}
+
 string DelegatingTask::get_operator_name(int index, bool is_axiom) const {
     return parent->get_operator_name(index, is_axiom);
 }
@@ -108,4 +112,13 @@ void DelegatingTask::convert_state_values(
     parent->convert_state_values(values, ancestor_task);
     convert_state_values_from_parent(values);
 }
+
+int DelegatingTask::get_cost_bound() const {
+  return parent->get_cost_bound();
+}
+
+vector<FactPairUtility> DelegatingTask::get_fact_pair_utilities() const {
+  return parent->get_fact_pair_utilities();
+}
+
 }

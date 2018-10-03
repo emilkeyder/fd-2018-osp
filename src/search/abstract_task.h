@@ -45,6 +45,11 @@ struct FactPair {
 
 std::ostream &operator<<(std::ostream &os, const FactPair &fact_pair);
 
+struct FactPairUtility {
+  FactPair fact_pair;
+  int utility;
+};
+
 namespace utils {
 inline void feed(HashState &hash_state, const FactPair &fact) {
     feed(hash_state, fact.var);
@@ -106,6 +111,13 @@ public:
     virtual void convert_state_values(
         std::vector<int> &values,
         const AbstractTask *ancestor_task) const = 0;
+
+    virtual int get_cost_bound() const = 0;
+    virtual std::vector<FactPairUtility> get_fact_pair_utilities() const = 0;
+
+    // Get the bounded operator cost. Equivalent to the normal operator cost,
+    // except in a soft goals problem.
+    virtual int get_bounded_operator_cost(int index, bool is_axiom) const = 0;
 };
 
 #endif
