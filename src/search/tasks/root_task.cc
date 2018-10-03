@@ -62,6 +62,10 @@ class RootTask : public AbstractTask {
     vector<int> initial_state_values;
     vector<FactPair> goals;
 
+    // Bound on cost of solution. 
+    int cost_bound = -1;
+    vector<FactPairUtility> fact_pair_utilities;
+
     const ExplicitVariable &get_variable(int var) const;
     const ExplicitEffect &get_effect(int op_id, int effect_id, bool is_axiom) const;
     const ExplicitOperator &get_operator_or_axiom(int index, bool is_axiom) const;
@@ -79,6 +83,8 @@ public:
         const FactPair &fact1, const FactPair &fact2) const override;
 
     virtual int get_operator_cost(int index, bool is_axiom) const override;
+    virtual int get_bounded_operator_cost(int index, bool is_axiom) const override;
+
     virtual string get_operator_name(
         int index, bool is_axiom) const override;
     virtual int get_num_operators() const override;
@@ -106,6 +112,9 @@ public:
     virtual void convert_state_values(
         vector<int> &values,
         const AbstractTask *ancestor_task) const override;
+
+    virtual int get_cost_bound() const override;
+    virtual vector<FactPairUtility> get_fact_pair_utilities() const override;
 };
 
 
@@ -232,6 +241,33 @@ void read_and_verify_version(istream &in) {
     }
 }
 
+int read_cost_bound(istream &in) {
+  int bound = -1;
+  check_magic(in, "begin_bound");
+  in >> bound;
+  if (bound < 0) {
+    cerr << "Read negative bound " << bound << ", using infinity instead." << endl;
+    bound = std::numeric_limits<int>::max();
+  }
+  check_magic(in, "end_bound");
+  return bound;
+}
+
+std::vector<FactPairUtility> read_util(istream &in) {
+  check_magic(in, "begin_util");
+  int count;
+  in >> count;
+  std::vector<FactPairUtility> fact_pair_utilities;
+  for (int i = 0; i < count; ++i) {
+    int var, val, util;
+    in >> var >> val >> util;    
+    fact_pair_utilities.push_back({{var, val}, util});
+  }
+  check_magic(in, "end_util");
+
+  return fact_pair_utilities;
+}
+
 bool read_metric(istream &in) {
     bool use_metric;
     check_magic(in, "begin_metric");
@@ -305,8 +341,8 @@ vector<FactPair> read_goal(istream &in) {
     vector<FactPair> goals = read_facts(in);
     check_magic(in, "end_goal");
     if (goals.empty()) {
-        cerr << "Task has no goal condition!" << endl;
-        utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
+        cout << "Task has no goal condition! (OK for soft goal problems)" << endl;
+        // utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
     return goals;
 }
@@ -346,6 +382,21 @@ RootTask::RootTask(std::istream &in) {
 
     goals = read_goal(in);
     check_facts(goals, variables);
+
+    fact_pair_utilities = read_util(in);
+    cout << "Total " << fact_pair_utilities.size() << " utilities defined." << endl;
+//     for (const auto& fpu : fact_pair_utilities) {
+//       cout << fpu.fact_pair.var << ", " << fpu.fact_pair.value
+// 	   << " --> " << fpu.utility << endl;
+//     }
+
+    if (goals.empty() && fact_pair_utilities.empty()) {
+      utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
+    }
+    
+    cost_bound = read_cost_bound(in);
+    cout << "Using cost bound: " << cost_bound << endl;
+
     operators = read_actions(in, false, use_metric, variables);
     axioms = read_actions(in, true, use_metric, variables);
     /* TODO: We should be stricter here and verify that we
@@ -421,6 +472,10 @@ int RootTask::get_operator_cost(int index, bool is_axiom) const {
     return get_operator_or_axiom(index, is_axiom).cost;
 }
 
+int RootTask::get_bounded_operator_cost(int index, bool is_axiom) const {
+    return get_operator_cost(index, is_axiom);
+}
+
 string RootTask::get_operator_name(int index, bool is_axiom) const {
     return get_operator_or_axiom(index, is_axiom).name;
 }
@@ -491,6 +546,14 @@ void RootTask::convert_state_values(
     if (this != ancestor_task) {
         ABORT("Invalid state conversion");
     }
+}
+
+int RootTask::get_cost_bound() const {
+  return cost_bound;
+}
+
+std::vector<FactPairUtility> RootTask::get_fact_pair_utilities() const {
+  return fact_pair_utilities;
 }
 
 void read_root_task(std::istream &in) {
