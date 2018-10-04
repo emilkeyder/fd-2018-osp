@@ -264,6 +264,7 @@ class VariableOrder(object):
         self._apply_to_variables(sas_task.variables)
         self._apply_to_init(sas_task.init)
         self._apply_to_goal(sas_task.goal)
+        self._apply_to_utility(sas_task.utility)
         self._apply_to_mutexes(sas_task.mutexes)
         self._apply_to_operators(sas_task.operators)
         self._apply_to_axioms(sas_task.axioms)
@@ -288,6 +289,11 @@ class VariableOrder(object):
     def _apply_to_goal(self, goal):
         goal.pairs = sorted((self.new_var[var], val)
                             for var, val in goal.pairs
+                            if var in self.new_var)
+
+    def _apply_to_utility(self, utility):
+        utility.triplets = sorted((self.new_var[var], val, util)
+                            for var, val, util in utility.triplets
                             if var in self.new_var)
 
     def _apply_to_mutexes(self, mutexes):
