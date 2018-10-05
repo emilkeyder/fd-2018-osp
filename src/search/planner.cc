@@ -7,6 +7,8 @@
 #include "utils/system.h"
 #include "utils/timer.h"
 
+#include "tasks/osp_utility_to_cost_task.h"
+
 #include <iostream>
 
 using namespace std;
@@ -25,6 +27,11 @@ int main(int argc, const char **argv) {
         cout << "reading input... [t=" << utils::g_timer << "]" << endl;
         tasks::read_root_task(cin);
         cout << "done reading input! [t=" << utils::g_timer << "]" << endl;
+	
+	cout << "Doing OSPUtilityToCost conversion... [t=" << utils::g_timer << "]" << endl;
+	tasks::g_root_task = std::make_shared<extra_tasks::OSPUtilityToCostTask>(tasks::g_root_task);
+	cout << "Done with OSPUtilityToCost conversion [t=" << utils::g_timer << "]" << endl;
+
         TaskProxy task_proxy(*tasks::g_root_task);
         unit_cost = task_properties::is_unit_cost(task_proxy);
     }
@@ -44,6 +51,11 @@ int main(int argc, const char **argv) {
     } catch (ParseError &error) {
         cerr << error << endl;
         utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
+    }
+
+    for (int i = 0; i < tasks::g_root_task->get_num_goals(); ++i) {
+      cout << "Goal #" << i << ": "
+	   << tasks::g_root_task->get_fact_name(tasks::g_root_task->get_goal_fact(i)) << endl;
     }
 
     utils::Timer search_timer;

@@ -384,11 +384,11 @@ RootTask::RootTask(std::istream &in) {
     check_facts(goals, variables);
 
     fact_pair_utilities = read_util(in);
-    cout << "Total " << fact_pair_utilities.size() << " utilities defined." << endl;
-//     for (const auto& fpu : fact_pair_utilities) {
-//       cout << fpu.fact_pair.var << ", " << fpu.fact_pair.value
-// 	   << " --> " << fpu.utility << endl;
-//     }
+    // cout << "Total " << fact_pair_utilities.size() << " utilities defined." << endl;
+    // for (const auto& fpu : fact_pair_utilities) {
+    //  cout << fpu.fact_pair.var << ", " << fpu.fact_pair.value
+    //       << " --> " << fpu.utility << endl;
+    // }
 
     if (goals.empty() && fact_pair_utilities.empty()) {
       utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
@@ -473,7 +473,9 @@ int RootTask::get_operator_cost(int index, bool is_axiom) const {
 }
 
 int RootTask::get_bounded_operator_cost(int index, bool is_axiom) const {
-    return get_operator_cost(index, is_axiom);
+  (void) index; 
+  (void) is_axiom;
+  return 0;
 }
 
 string RootTask::get_operator_name(int index, bool is_axiom) const {
