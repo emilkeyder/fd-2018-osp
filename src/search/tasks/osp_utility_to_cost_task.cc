@@ -124,7 +124,9 @@ namespace extra_tasks {
   }
 
   int OSPUtilityToCostTask::get_operator_cost(int index, bool is_axiom) const {
-    return index < parent->get_num_operators() ? parent->get_operator_cost(index, is_axiom)
+    (void) is_axiom;
+    return index < parent->get_num_operators()
+      ? 0 // parent->get_operator_cost(index, is_axiom)
       : sg_operators[index - parent->get_num_operators()].cost;
   }
 
