@@ -466,6 +466,10 @@ public:
         return task->get_operator_cost(index, is_an_axiom);
     }
 
+    int get_bounded_cost() const {
+        return task->get_bounded_operator_cost(index, is_an_axiom);
+    }
+
     bool is_axiom() const {
         return is_an_axiom;
     }
@@ -698,6 +702,8 @@ public:
     }
 
     const causal_graph::CausalGraph &get_causal_graph() const;
+
+    int get_cost_bound() const { return task->get_cost_bound(); }
 };
 
 

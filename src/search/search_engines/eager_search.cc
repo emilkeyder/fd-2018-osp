@@ -145,6 +145,9 @@ SearchStatus EagerSearch::step() {
         if ((node.get_real_g() + op.get_cost()) >= bound)
             continue;
 
+	if ((node.get_bounded_g() + op.get_bounded_cost()) > task_proxy.get_cost_bound())
+            continue;
+
         GlobalState succ_state = state_registry.get_successor_state(s, op);
         statistics.inc_generated();
         bool is_preferred = preferred_operators.contains(op_id);
