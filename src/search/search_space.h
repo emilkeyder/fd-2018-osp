@@ -34,6 +34,7 @@ public:
 
     int get_g() const;
     int get_real_g() const;
+    int get_bounded_g() const;
 
     void open_initial();
     void open(const SearchNode &parent_node,
