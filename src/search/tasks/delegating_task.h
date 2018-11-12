@@ -64,6 +64,7 @@ public:
 
     virtual int get_cost_bound() const override;
     virtual std::vector<FactPairUtility> get_fact_pair_utilities() const override;
+    virtual int get_max_possible_utility() const override;
 
     virtual int get_bounded_operator_cost(int index, bool is_axiom) const override;
 };

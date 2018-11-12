@@ -9,7 +9,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <memory>
+#include <numeric>
 #include <set>
 #include <unordered_set>
 #include <vector>
@@ -115,6 +117,7 @@ public:
 
     virtual int get_cost_bound() const override;
     virtual vector<FactPairUtility> get_fact_pair_utilities() const override;
+    virtual int get_max_possible_utility() const override;
 };
 
 
@@ -556,6 +559,16 @@ int RootTask::get_cost_bound() const {
 
 std::vector<FactPairUtility> RootTask::get_fact_pair_utilities() const {
   return fact_pair_utilities;
+}
+
+int RootTask::get_max_possible_utility() const {
+  std::vector<int> max_possible_utilities(get_num_variables());
+  for (const FactPairUtility& fpu : get_fact_pair_utilities()) {
+    max_possible_utilities[fpu.fact_pair.var] = std::max(max_possible_utilities[fpu.fact_pair.var], 
+							 fpu.utility);
+  }
+  
+  return std::accumulate(max_possible_utilities.begin(), max_possible_utilities.end(), 0);
 }
 
 void read_root_task(std::istream &in) {

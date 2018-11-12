@@ -121,4 +121,8 @@ vector<FactPairUtility> DelegatingTask::get_fact_pair_utilities() const {
   return parent->get_fact_pair_utilities();
 }
 
+int DelegatingTask::get_max_possible_utility() const {
+  return parent->get_max_possible_utility();
+}
+
 }
