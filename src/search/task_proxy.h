@@ -704,6 +704,7 @@ public:
     const causal_graph::CausalGraph &get_causal_graph() const;
 
     int get_cost_bound() const { return task->get_cost_bound(); }
+    int get_max_possible_utility() const { return task->get_max_possible_utility(); }
 };
 
 

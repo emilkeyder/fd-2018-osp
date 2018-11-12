@@ -66,5 +66,6 @@ void PlanManager::save_plan(
     outfile.close();
     cout << "Plan length: " << plan.size() << " step(s)." << endl;
     cout << "Plan cost: " << plan_cost << endl;
+    cout << "Plan utility: " << task_proxy.get_max_possible_utility() - plan_cost << endl;
     ++num_previously_generated_plans;
 }
