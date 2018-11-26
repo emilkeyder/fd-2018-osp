@@ -32,10 +32,22 @@ int main(int argc, const char **argv) {
 	tasks::g_root_task = std::make_shared<extra_tasks::OSPUtilityToCostTask>(tasks::g_root_task);
 	cout << "Done with OSPUtilityToCost conversion [t=" << utils::g_timer << "]" << endl;
 
+	std::vector<FactPairUtility> utilities = tasks::g_root_task->get_fact_pair_utilities();
+	std::vector<int> initial_state_values = tasks::g_root_task->get_initial_state_values();
+
+	int initial_state_util = 0;
+	for (const FactPairUtility& fpu : utilities) {
+	  if (initial_state_values[fpu.fact_pair.var] == fpu.fact_pair.value) {
+	    initial_state_util += fpu.utility;
+	  }
+	}
+	
+	cout << "Initial State has utility: " << initial_state_util << endl;
+	
         TaskProxy task_proxy(*tasks::g_root_task);
         unit_cost = task_properties::is_unit_cost(task_proxy);
     }
-
+    
     shared_ptr<SearchEngine> engine;
 
     // The command line is parsed twice: once in dry-run mode, to
