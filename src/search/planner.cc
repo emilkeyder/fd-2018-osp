@@ -43,6 +43,7 @@ int main(int argc, const char **argv) {
 	}
 	
 	cout << "Initial State has utility: " << initial_state_util << endl;
+	cout << "Utility upper-bound: " << tasks::g_root_task->get_max_possible_utility() << endl;
 	
         TaskProxy task_proxy(*tasks::g_root_task);
         unit_cost = task_properties::is_unit_cost(task_proxy);
