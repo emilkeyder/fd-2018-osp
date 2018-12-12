@@ -11,9 +11,10 @@ using namespace std;
 
 EvaluationContext::EvaluationContext(
     const EvaluatorCache &cache, int g_value, bool is_preferred,
-    SearchStatistics *statistics, bool calculate_preferred)
+    SearchStatistics *statistics, bool calculate_preferred, int bounded_g_value)
     : cache(cache),
       g_value(g_value),
+      bounded_g_value(bounded_g_value),
       preferred(is_preferred),
       statistics(statistics),
       calculate_preferred(calculate_preferred) {
@@ -21,8 +22,8 @@ EvaluationContext::EvaluationContext(
 
 EvaluationContext::EvaluationContext(
     const GlobalState &state, int g_value, bool is_preferred,
-    SearchStatistics *statistics, bool calculate_preferred)
-    : EvaluationContext(EvaluatorCache(state), g_value, is_preferred, statistics, calculate_preferred) {
+    SearchStatistics *statistics, bool calculate_preferred, int bounded_g_value)
+  : EvaluationContext(EvaluatorCache(state), g_value, is_preferred, statistics, calculate_preferred, bounded_g_value) {
 }
 
 EvaluationContext::EvaluationContext(
@@ -55,6 +56,10 @@ const GlobalState &EvaluationContext::get_state() const {
 int EvaluationContext::get_g_value() const {
     assert(g_value != INVALID);
     return g_value;
+}
+
+int EvaluationContext::get_bounded_g_value() const {
+  return bounded_g_value;
 }
 
 bool EvaluationContext::is_preferred() const {

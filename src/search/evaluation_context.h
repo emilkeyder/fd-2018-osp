@@ -43,6 +43,7 @@ class SearchStatistics;
 class EvaluationContext {
     EvaluatorCache cache;
     int g_value;
+    int bounded_g_value;
     bool preferred;
     SearchStatistics *statistics;
     bool calculate_preferred;
@@ -58,14 +59,14 @@ public:
     */
     EvaluationContext(
         const EvaluatorCache &cache, int g_value, bool is_preferred,
-        SearchStatistics *statistics, bool calculate_preferred = false);
+        SearchStatistics *statistics, bool calculate_preferred = false, int bounded_g_value = 0);
     /*
       Create new heuristic cache for caching heuristic values. Used for example
       by eager search.
     */
     EvaluationContext(
         const GlobalState &state, int g_value, bool is_preferred,
-        SearchStatistics *statistics, bool calculate_preferred = false);
+        SearchStatistics *statistics, bool calculate_preferred = false, int bounded_g_value = 0);
     /*
       Use the following constructor when you don't care about g values,
       preferredness (and statistics), e.g. when sampling states for heuristics.
@@ -88,6 +89,7 @@ public:
     const EvaluatorCache &get_cache() const;
     const GlobalState &get_state() const;
     int get_g_value() const;
+    int get_bounded_g_value() const;
     bool is_preferred() const;
 
     /*
