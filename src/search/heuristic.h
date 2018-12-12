@@ -64,6 +64,11 @@ protected:
     // TODO: Call with State directly once all heuristics support it.
     virtual int compute_heuristic(const GlobalState &state) = 0;
 
+    virtual int compute_heuristic_w_bound(const GlobalState &state, int cost_bound) {
+      (void) cost_bound;
+      return compute_heuristic(state);
+    };
+
     /*
       Usage note: Marking the same operator as preferred multiple times
       is OK -- it will only appear once in the list of preferred

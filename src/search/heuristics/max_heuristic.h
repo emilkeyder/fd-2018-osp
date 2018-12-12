@@ -27,7 +27,9 @@ class HSPMaxHeuristic : public relaxation_heuristic::RelaxationHeuristic {
         assert(prop->cost != -1 && prop->cost <= cost);
     }
 protected:
-    virtual int compute_heuristic(const GlobalState &global_state);
+    virtual int compute_heuristic(const GlobalState &global_state) override;
+    virtual int compute_heuristic_w_bound(
+	const GlobalState &global_state, int cost_bound) override;
 public:
     HSPMaxHeuristic(const options::Options &opts);
     ~HSPMaxHeuristic();

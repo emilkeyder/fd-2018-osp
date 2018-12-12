@@ -132,7 +132,7 @@ SearchStatus EagerSearch::step() {
     pruning_method->prune_operators(s, applicable_ops);
 
     // This evaluates the expanded state (again) to get preferred ops
-    EvaluationContext eval_context(s, node.get_g(), false, &statistics, true);
+    EvaluationContext eval_context(s, node.get_g(), false, &statistics, true, node.get_bounded_g());
     ordered_set::OrderedSet<OperatorID> preferred_operators;
     for (const shared_ptr<Evaluator> &preferred_operator_evaluator : preferred_operator_evaluators) {
         collect_preferred_operators(eval_context,
@@ -170,9 +170,10 @@ SearchStatus EagerSearch::step() {
             // hence the stupid computation of succ_g.
             // TODO: Make this less fragile.
             int succ_g = node.get_g() + get_adjusted_cost(op);
+            int succ_bounded_g = node.get_bounded_g() + op.get_bounded_cost();
 
             EvaluationContext eval_context(
-                succ_state, succ_g, is_preferred, &statistics);
+                succ_state, succ_g, is_preferred, &statistics, false, succ_bounded_g);
             statistics.inc_evaluated_states();
 
             if (open_list->is_dead_end(eval_context)) {
@@ -187,7 +188,9 @@ SearchStatus EagerSearch::step() {
                 print_checkpoint_line(succ_node.get_g());
                 reward_progress();
             }
-        } else if (succ_node.get_g() > node.get_g() + get_adjusted_cost(op)) {
+        } else if ((succ_node.get_g() > node.get_g() + get_adjusted_cost(op)) ||
+		    (succ_node.get_g() == node.get_g() + get_adjusted_cost(op) &&
+		     (succ_node.get_bounded_g() > node.get_bounded_g() + op.get_bounded_cost()))) {
             // We found a new cheapest path to an open or closed state.
             if (reopen_closed_nodes) {
                 if (succ_node.is_closed()) {
@@ -203,7 +206,7 @@ SearchStatus EagerSearch::step() {
                 succ_node.reopen(node, op, get_adjusted_cost(op));
 
                 EvaluationContext eval_context(
-                    succ_state, succ_node.get_g(), is_preferred, &statistics);
+                    succ_state, succ_node.get_g(), is_preferred, &statistics, false, succ_node.get_bounded_g());
 
                 /*
                   Note: our old code used to retrieve the h value from
@@ -290,7 +293,7 @@ pair<SearchNode, bool> EagerSearch::fetch_next_node() {
                   We can pass calculate_preferred=false here
                   since preferred operators are computed when the state is expanded.
                 */
-                EvaluationContext eval_context(s, node.get_g(), false, &statistics);
+                EvaluationContext eval_context(s, node.get_g(), false, &statistics, false, node.get_bounded_g());
                 int new_h = eval_context.get_evaluator_value_or_infinity(lazy_evaluator.get());
                 if (open_list->is_dead_end(eval_context)) {
                     node.mark_as_dead_end();
@@ -337,7 +340,7 @@ void EagerSearch::update_f_value_statistics(const SearchNode &node) {
           TODO: This code doesn't fit the idea of supporting
           an arbitrary f evaluator.
         */
-        EvaluationContext eval_context(node.get_state(), node.get_g(), false, &statistics);
+      EvaluationContext eval_context(node.get_state(), node.get_g(), false, &statistics, false, node.get_bounded_g());
         int f_value = eval_context.get_evaluator_value(f_evaluator.get());
         statistics.report_f_value_progress(f_value);
     }
