@@ -37,6 +37,8 @@ namespace causal_graph {
 class CausalGraph;
 }
 
+using namespace std;
+
 /*
   Overview of the task interface.
 
@@ -466,6 +468,10 @@ public:
         return task->get_operator_cost(index, is_an_axiom);
     }
 
+    int get_cost(const GlobalState& state) const {
+      return task->get_operator_cost(index, is_an_axiom, state);
+    }
+
     int get_bounded_cost() const {
         return task->get_bounded_operator_cost(index, is_an_axiom);
     }
@@ -705,6 +711,9 @@ public:
 
     int get_cost_bound() const { return task->get_cost_bound(); }
     int get_max_possible_utility() const { return task->get_max_possible_utility(); }
+    int get_state_utility(const GlobalState& state) const {
+      return task->get_state_utility(state);
+    }
 };
 
 

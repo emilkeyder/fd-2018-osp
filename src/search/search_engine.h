@@ -55,6 +55,7 @@ protected:
     void set_plan(const Plan &plan);
     bool check_goal_and_set_plan(const GlobalState &state);
     int get_adjusted_cost(const OperatorProxy &op) const;
+    virtual int get_adjusted_cost(const OperatorProxy &op, const GlobalState &state) const;
 public:
     SearchEngine(const options::Options &opts);
     virtual ~SearchEngine();

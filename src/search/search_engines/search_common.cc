@@ -3,6 +3,7 @@
 #include "../open_list_factory.h"
 #include "../option_parser_util.h"
 
+#include "../evaluators/bounded_g_evaluator.h"
 #include "../evaluators/g_evaluator.h"
 #include "../evaluators/sum_evaluator.h"
 #include "../evaluators/weighted_evaluator.h"
@@ -17,6 +18,7 @@ using namespace std;
 
 namespace search_common {
 using GEval = g_evaluator::GEvaluator;
+using BoundedGEval = bounded_g_evaluator::BoundedGEvaluator;
 using SumEval = sum_evaluator::SumEvaluator;
 using WeightedEval = weighted_evaluator::WeightedEvaluator;
 
@@ -113,9 +115,10 @@ shared_ptr<OpenListFactory> create_wastar_open_list_factory(
 pair<shared_ptr<OpenListFactory>, const shared_ptr<Evaluator>>
 create_astar_open_list_factory_and_f_eval(const Options &opts) {
     shared_ptr<GEval> g = make_shared<GEval>();
+    shared_ptr<BoundedGEval> bounded_g = make_shared<BoundedGEval>();
     shared_ptr<Evaluator> h = opts.get<shared_ptr<Evaluator>>("eval");
     shared_ptr<Evaluator> f = make_shared<SumEval>(vector<shared_ptr<Evaluator>>({g, h}));
-    vector<shared_ptr<Evaluator>> evals = {f, h};
+    vector<shared_ptr<Evaluator>> evals = {f, h, bounded_g};
 
     Options options;
     options.set("evals", evals);

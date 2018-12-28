@@ -39,6 +39,10 @@ int DelegatingTask::get_operator_cost(int index, bool is_axiom) const {
     return parent->get_operator_cost(index, is_axiom);
 }
 
+int DelegatingTask::get_operator_cost(int index, bool is_axiom, const GlobalState& state) const {
+  return parent->get_operator_cost(index, is_axiom, state);
+}
+
 int DelegatingTask::get_bounded_operator_cost(int index, bool is_axiom) const {
     return parent->get_bounded_operator_cost(index, is_axiom);
 }
@@ -121,8 +125,16 @@ vector<FactPairUtility> DelegatingTask::get_fact_pair_utilities() const {
   return parent->get_fact_pair_utilities();
 }
 
+std::map<int, std::map<int, int>> DelegatingTask::get_utilities_map() const {
+  return parent->get_utilities_map();
+}
+
 int DelegatingTask::get_max_possible_utility() const {
   return parent->get_max_possible_utility();
+}
+
+int DelegatingTask::get_state_utility(const GlobalState& state) const {
+  return parent->get_state_utility(state);
 }
 
 }

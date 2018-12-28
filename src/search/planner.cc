@@ -7,7 +7,7 @@
 #include "utils/system.h"
 #include "utils/timer.h"
 
-#include "tasks/osp_utility_to_cost_task.h"
+#include "tasks/osp_single_end_action_reformulation_task.h"
 
 #include <iostream>
 
@@ -28,9 +28,10 @@ int main(int argc, const char **argv) {
         tasks::read_root_task(cin);
         cout << "done reading input! [t=" << utils::g_timer << "]" << endl;
 	
-	cout << "Doing OSPUtilityToCost conversion... [t=" << utils::g_timer << "]" << endl;
-	tasks::g_root_task = std::make_shared<extra_tasks::OSPUtilityToCostTask>(tasks::g_root_task);
-	cout << "Done with OSPUtilityToCost conversion [t=" << utils::g_timer << "]" << endl;
+	cout << "Doing OSPSingleEndActionReformulationTask conversion... [t=" << utils::g_timer << "]" << endl;
+	tasks::g_root_task = std::make_shared<extra_tasks::OSPSingleEndActionReformulationTask>(
+	    tasks::g_root_task);
+	cout << "Done with OSPSingleEndActionReformulationTask conversion [t=" << utils::g_timer << "]" << endl;
 
 	std::vector<FactPairUtility> utilities = tasks::g_root_task->get_fact_pair_utilities();
 	std::vector<int> initial_state_values = tasks::g_root_task->get_initial_state_values();
