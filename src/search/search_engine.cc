@@ -122,6 +122,11 @@ int SearchEngine::get_adjusted_cost(const OperatorProxy &op) const {
     return get_adjusted_action_cost(op, cost_type, is_unit_cost);
 }
 
+int SearchEngine::get_adjusted_cost(
+    const OperatorProxy &op, const GlobalState &state) const {
+  return get_adjusted_action_cost(op, cost_type, is_unit_cost, state);
+}
+
 /* TODO: merge this into add_options_to_parser when all search
          engines support pruning.
 

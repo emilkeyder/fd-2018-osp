@@ -64,9 +64,11 @@ class RootTask : public AbstractTask {
     vector<int> initial_state_values;
     vector<FactPair> goals;
 
-    // Bound on cost of solution. 
+    // Bound on cost of solution.
     int cost_bound = -1;
     vector<FactPairUtility> fact_pair_utilities;
+    // variable index --> var value --> utility
+    std::map<int, std::map<int, int>> utilities_map;
 
     const ExplicitVariable &get_variable(int var) const;
     const ExplicitEffect &get_effect(int op_id, int effect_id, bool is_axiom) const;
@@ -85,6 +87,7 @@ public:
         const FactPair &fact1, const FactPair &fact2) const override;
 
     virtual int get_operator_cost(int index, bool is_axiom) const override;
+    virtual int get_operator_cost(int index, bool is_axiom, const GlobalState &state) const override;
     virtual int get_bounded_operator_cost(int index, bool is_axiom) const override;
 
     virtual string get_operator_name(
@@ -117,7 +120,10 @@ public:
 
     virtual int get_cost_bound() const override;
     virtual vector<FactPairUtility> get_fact_pair_utilities() const override;
+    virtual std::map<int, std::map<int, int>> get_utilities_map() const override;
+
     virtual int get_max_possible_utility() const override;
+  virtual int get_state_utility(const GlobalState& state) const override;
 };
 
 
@@ -263,7 +269,7 @@ std::vector<FactPairUtility> read_util(istream &in) {
   std::vector<FactPairUtility> fact_pair_utilities;
   for (int i = 0; i < count; ++i) {
     int var, val, util;
-    in >> var >> val >> util;    
+    in >> var >> val >> util;
     fact_pair_utilities.push_back({{var, val}, util});
   }
   check_magic(in, "end_util");
@@ -387,16 +393,16 @@ RootTask::RootTask(std::istream &in) {
     check_facts(goals, variables);
 
     fact_pair_utilities = read_util(in);
-    // cout << "Total " << fact_pair_utilities.size() << " utilities defined." << endl;
-    // for (const auto& fpu : fact_pair_utilities) {
-    //  cout << fpu.fact_pair.var << ", " << fpu.fact_pair.value
-    //       << " --> " << fpu.utility << endl;
-    // }
+    for (const auto util : fact_pair_utilities) {
+      utilities_map[util.fact_pair.var][util.fact_pair.value] = util.utility;
+      cout << "Fact " << get_fact_name({util.fact_pair.var, util.fact_pair.value})
+	   << " with utility " << util.utility << endl;
+    }
 
     if (goals.empty() && fact_pair_utilities.empty()) {
       utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
-    
+
     cost_bound = read_cost_bound(in);
     cout << "Using cost bound: " << cost_bound << endl;
 
@@ -475,8 +481,13 @@ int RootTask::get_operator_cost(int index, bool is_axiom) const {
     return get_operator_or_axiom(index, is_axiom).cost;
 }
 
+int RootTask::get_operator_cost(int index, bool is_axiom, const GlobalState& state) const {
+  (void) state;
+  return get_operator_or_axiom(index, is_axiom).cost;
+}
+
 int RootTask::get_bounded_operator_cost(int index, bool is_axiom) const {
-  (void) index; 
+  (void) index;
   (void) is_axiom;
   return 0;
 }
@@ -561,14 +572,34 @@ std::vector<FactPairUtility> RootTask::get_fact_pair_utilities() const {
   return fact_pair_utilities;
 }
 
+std::map<int, std::map<int, int>> RootTask::get_utilities_map() const {
+  return utilities_map;
+}
+
 int RootTask::get_max_possible_utility() const {
   std::vector<int> max_possible_utilities(get_num_variables());
   for (const FactPairUtility& fpu : get_fact_pair_utilities()) {
-    max_possible_utilities[fpu.fact_pair.var] = std::max(max_possible_utilities[fpu.fact_pair.var], 
+    max_possible_utilities[fpu.fact_pair.var] = std::max(max_possible_utilities[fpu.fact_pair.var],
 							 fpu.utility);
   }
-  
+
   return std::accumulate(max_possible_utilities.begin(), max_possible_utilities.end(), 0);
+}
+
+int RootTask::get_state_utility(const GlobalState& state) const {
+  int utility = 0;
+  for (const auto& var_entry : get_utilities_map()) {
+    const int var = var_entry.first;
+    const std::map<int,int>& val_util_map = var_entry.second;
+
+    const int state_val = state[var];
+
+    const auto& val_util_entry = val_util_map.find(state_val);
+    if (val_util_entry != val_util_map.end()) {
+      utility += val_util_entry->second;
+    }
+  }
+  return utility;
 }
 
 void read_root_task(std::istream &in) {

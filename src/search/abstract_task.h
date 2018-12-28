@@ -1,11 +1,13 @@
 #ifndef ABSTRACT_TASK_H
 #define ABSTRACT_TASK_H
 
+#include "global_state.h"
 #include "operator_id.h"
 
 #include "algorithms/subscriber.h"
 #include "utils/hash.h"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -71,6 +73,9 @@ public:
     virtual bool are_facts_mutex(const FactPair &fact1, const FactPair &fact2) const = 0;
 
     virtual int get_operator_cost(int index, bool is_axiom) const = 0;
+    virtual int get_operator_cost(
+	int index, bool is_axiom, const GlobalState &state) const = 0;
+
     virtual std::string get_operator_name(int index, bool is_axiom) const = 0;
     virtual int get_num_operators() const = 0;
     virtual int get_num_operator_preconditions(int index, bool is_axiom) const = 0;
@@ -114,6 +119,8 @@ public:
 
     virtual int get_cost_bound() const = 0;
     virtual std::vector<FactPairUtility> get_fact_pair_utilities() const = 0;
+    virtual std::map<int, std::map<int, int>> get_utilities_map() const = 0;
+    virtual int get_state_utility(const GlobalState& state) const = 0;
 
     virtual int get_max_possible_utility() const = 0;
 

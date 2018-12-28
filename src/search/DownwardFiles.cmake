@@ -263,6 +263,14 @@ fast_downward_plugin(
 )
 
 fast_downward_plugin(
+    NAME BOUNDED_G_EVALUATOR
+    HELP "The bounded g-evaluator"
+    SOURCES
+        evaluators/bounded_g_evaluator
+    DEPENDS EVALUATORS_PLUGIN_GROUP
+)
+
+fast_downward_plugin(
     NAME COMBINING_EVALUATOR
     HELP "The combining evaluator"
     SOURCES
@@ -340,7 +348,7 @@ fast_downward_plugin(
     HELP "Basic classes used for all search engines"
     SOURCES
         search_engines/search_common
-    DEPENDS ALTERNATION_OPEN_LIST G_EVALUATOR STANDARD_SCALAR_OPEN_LIST SUM_EVALUATOR TIEBREAKING_OPEN_LIST WEIGHTED_EVALUATOR
+    DEPENDS ALTERNATION_OPEN_LIST G_EVALUATOR BOUNDED_G_EVALUATOR STANDARD_SCALAR_OPEN_LIST SUM_EVALUATOR TIEBREAKING_OPEN_LIST WEIGHTED_EVALUATOR
     DEPENDENCY_ONLY
 )
 
@@ -406,7 +414,7 @@ fast_downward_plugin(
     HELP "Lazy enforced hill-climbing search algorithm"
     SOURCES
         search_engines/enforced_hill_climbing_search
-    DEPENDS G_EVALUATOR ORDERED_SET PREF_EVALUATOR SEARCH_COMMON SUCCESSOR_GENERATOR
+    DEPENDS G_EVALUATOR BOUNDED_G_EVALUATOR ORDERED_SET PREF_EVALUATOR SEARCH_COMMON SUCCESSOR_GENERATOR
 )
 
 fast_downward_plugin(
@@ -541,6 +549,7 @@ fast_downward_plugin(
         tasks/modified_goals_task
         tasks/modified_operator_costs_task
         tasks/osp_utility_to_cost_task
+        tasks/osp_single_end_action_reformulation_task
     DEPENDS TASK_PROPERTIES
     DEPENDENCY_ONLY
 )

@@ -2,6 +2,7 @@
 
 #include "task_proxy.h"
 
+#include "state_registry.h"
 #include "task_utils/task_properties.h"
 
 #include <fstream>
@@ -16,6 +17,15 @@ int calculate_plan_cost(const Plan &plan, const TaskProxy &task_proxy) {
     int plan_cost = 0;
     for (OperatorID op_id : plan) {
         plan_cost += operators[op_id].get_cost();
+    }
+    return plan_cost;
+}
+
+int calculate_bounded_plan_cost(const Plan &plan, const TaskProxy &task_proxy) {
+    OperatorsProxy operators = task_proxy.get_operators();
+    int plan_cost = 0;
+    for (OperatorID op_id : plan) {
+        plan_cost += operators[op_id].get_bounded_cost();
     }
     return plan_cost;
 }
@@ -38,6 +48,14 @@ void PlanManager::set_is_part_of_anytime_portfolio(bool is_part_of_anytime_portf
     is_part_of_anytime_portfolio = is_part_of_anytime_portfolio_;
 }
 
+bool is_soft_goal_action(const OperatorProxy& op) {
+  std::vector<string> soft_goal_ops = { "SG_END_ACTION" };
+  for (const string& soft_goal_op : soft_goal_ops) {
+    if (op.get_name() == soft_goal_op) return true;
+  }
+  return false;
+}
+
 void PlanManager::save_plan(
     const Plan &plan, const TaskProxy &task_proxy,
     bool generates_multiple_plan_files) {
@@ -54,18 +72,30 @@ void PlanManager::save_plan(
         cerr << "Failed to open plan file: " << filename.str() << endl;
         utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
     }
+
+    StateRegistry plan_states_registry(task_proxy);
+    GlobalState gs = plan_states_registry.get_initial_state();
+
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
+      if (!is_soft_goal_action(operators[op_id])) {
         cout << operators[op_id].get_name() << " (" << operators[op_id].get_cost() << ")" << endl;
         outfile << "(" << operators[op_id].get_name() << ")" << endl;
+	gs = plan_states_registry.get_successor_state(gs, operators[op_id]);
+      }
     }
-    int plan_cost = calculate_plan_cost(plan, task_proxy);
+
+    int plan_cost = calculate_bounded_plan_cost(plan, task_proxy);
     bool is_unit_cost = task_properties::is_unit_cost(task_proxy);
+
     outfile << "; cost = " << plan_cost << " ("
             << (is_unit_cost ? "unit cost" : "general cost") << ")" << endl;
     outfile.close();
     cout << "Plan length: " << plan.size() << " step(s)." << endl;
     cout << "Plan cost: " << plan_cost << endl;
-    cout << "Solution found with utility value: " << task_proxy.get_max_possible_utility() - plan_cost << endl;
+
+    int plan_utility = task_proxy.get_state_utility(gs);
+    cout << "Solution found with utility value: " << plan_utility << endl;
+
     ++num_previously_generated_plans;
 }
