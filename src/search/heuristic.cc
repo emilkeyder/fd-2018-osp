@@ -59,7 +59,8 @@ EvaluationResult Heuristic::compute_result(EvaluationContext &eval_context) {
         result.set_count_evaluation(false);
     } else {
       // heuristic = compute_heuristic(state);
-      heuristic = compute_heuristic_w_bound(state, eval_context.get_bounded_g_value());
+      heuristic = compute_heuristic_w_bound(
+	  state, task_proxy.get_cost_bound() - eval_context.get_bounded_g_value());
         if (cache_evaluator_values) {
             heuristic_cache[state] = HEntry(heuristic, false);
         }
