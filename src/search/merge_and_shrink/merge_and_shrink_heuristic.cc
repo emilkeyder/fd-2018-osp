@@ -409,8 +409,9 @@ int MergeAndShrinkHeuristic::compute_heuristic_w_bound(const GlobalState &global
     State state = convert_global_state(global_state);
     // Recomputing goal distances from the current state, using cost bound for the secondary cost function
     mas_distances->recompute_goal_distances(cost_bound);
-    mas_representation->set_distances(*mas_distances);
-    int cost = mas_representation->get_value(state);
+
+    int abstract_state = mas_representation->get_value(state);
+    int cost = mas_distances->get_goal_distance(abstract_state);
     if (cost == PRUNED_STATE || cost == INF) {
         // If state is unreachable or irrelevant, we encountered a dead end.
         return DEAD_END;
