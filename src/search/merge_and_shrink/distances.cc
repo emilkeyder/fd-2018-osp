@@ -223,7 +223,10 @@ void Distances::build_final_backward_graph() {
 }
 
 void Distances::recompute_goal_distances(int cost_bound) {
-
+    // Resetting goal_distances to INF
+    vector<int> new_distances(get_num_states(), INF);
+    goal_distances.swap(new_distances);
+    
     priority_queues::AdaptiveQueue<std::pair<int,int>> queue;
     for (int state = 0; state < get_num_states(); ++state) {
         if (transition_system.is_goal_state(state)) {
