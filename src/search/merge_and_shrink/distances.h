@@ -15,8 +15,13 @@
 */
 
 namespace merge_and_shrink {
-class TransitionSystem;
+struct bnode {
+    int src;
+    int cost;
+    int secondary_cost;
+};
 
+class TransitionSystem;
 class Distances {
     static const int DISTANCE_UNKNOWN = -1;
     const TransitionSystem &transition_system;
@@ -33,6 +38,11 @@ class Distances {
     void compute_goal_distances_unit_cost();
     void compute_init_distances_general_cost();
     void compute_goal_distances_general_cost();
+
+
+
+    std::vector<std::vector<bnode>> final_entry_backward_graph;
+
 public:
     explicit Distances(const TransitionSystem &transition_system);
     ~Distances() = default;
@@ -44,6 +54,10 @@ public:
     bool are_goal_distances_computed() const {
         return goal_distances_computed;
     }
+
+    void build_final_backward_graph();
+    /* Currently, computing from goal states for all states */
+    void recompute_goal_distances(int cost_bound);
 
     void compute_distances(
         bool compute_init_distances,

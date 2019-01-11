@@ -17,6 +17,8 @@
 #include "../utils/rng_options.h"
 #include "../utils/system.h"
 
+#include "../task_utils/task_properties.h"
+
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -31,7 +33,7 @@ LabelReduction::LabelReduction(const Options &options)
       lr_before_merging(options.get<bool>("before_merging")),
       lr_method(LabelReductionMethod(options.get_enum("method"))),
       lr_system_order(LabelReductionSystemOrder(options.get_enum("system_order"))),
-      rng(utils::parse_rng_from_options(options)) {
+      rng(utils::parse_rng_from_options(options)), maximal_secondary_cost(-1) {
 }
 
 bool LabelReduction::initialized() const {
@@ -56,6 +58,8 @@ void LabelReduction::initialize(const TaskProxy &task_proxy) {
         for (size_t i = 0; i < max_transition_system_count; ++i)
             transition_system_order.push_back(max_transition_system_count - 1 - i);
     }
+
+    maximal_secondary_cost = task_properties::get_max_bounded_operator_cost(task_proxy);
 }
 
 void LabelReduction::compute_label_mapping(
@@ -63,7 +67,7 @@ void LabelReduction::compute_label_mapping(
     const FactoredTransitionSystem &fts,
     vector<pair<int, vector<int>>> &label_mapping,
     Verbosity verbosity) const {
-    const Labels &labels = fts.get_labels();
+    const Labels &labels = fts.get_labels(); 
     int next_new_label_no = labels.get_size();
     int num_labels = 0;
     int num_labels_after_reduction = 0;
@@ -78,7 +82,13 @@ void LabelReduction::compute_label_mapping(
             if (labels.is_current_label(label_no)) {
                 // only consider non-reduced labels
                 int cost = labels.get_label_cost(label_no);
-                equivalent_label_nos[cost].push_back(label_no);
+                int secondary_cost = labels.get_label_secondary_cost(label_no);
+                // Since either cost or secondary_cost are 0 for all operators, this hash is exact.
+                int unified_cost = secondary_cost;
+                if (cost > 0) {
+                    unified_cost = cost + maximal_secondary_cost + 1;
+                }
+                equivalent_label_nos[unified_cost].push_back(label_no);
                 ++num_labels;
             }
         }

@@ -126,6 +126,38 @@ static void dijkstra_search(
     }
 }
 
+static void bounded_dijkstra_search(
+    const vector<vector<merge_and_shrink::bnode>> &graph,
+    priority_queues::AdaptiveQueue<std::pair<int,int>> &queue,
+    vector<int> &distances, int bound) {
+    while (!queue.empty()) {
+        pair<int, pair<int,int>> top_pair = queue.pop();
+        int distance = top_pair.first;
+        int state = top_pair.second.first;
+        int secondary_distance = top_pair.second.second;
+        int state_distance = distances[state];
+        assert(state_distance <= distance);
+        if (state_distance < distance)
+            continue;
+        for (size_t i = 0; i < graph[state].size(); ++i) {
+            const merge_and_shrink::bnode &transition = graph[state][i];
+            int secondary_cost = transition.secondary_cost;
+            int successor_secondary_cost = secondary_distance + secondary_cost;
+            if (successor_secondary_cost > bound)
+                continue;
+            int successor = transition.src;
+            int cost = transition.cost;
+            int successor_cost = state_distance + cost;
+            if (distances[successor] > successor_cost) {
+                distances[successor] = successor_cost;
+                queue.push(successor_cost, make_pair(successor, successor_secondary_cost));
+            }
+        }
+    }
+}
+
+
+
 void Distances::compute_init_distances_general_cost() {
     vector<vector<pair<int, int>>> forward_graph(get_num_states());
     for (const GroupAndTransitions &gat : transition_system) {
@@ -174,6 +206,35 @@ void Distances::compute_goal_distances_general_cost() {
     }
     dijkstra_search(backward_graph, queue, goal_distances);
 }
+
+void Distances::build_final_backward_graph() {
+    final_entry_backward_graph.resize(get_num_states());
+
+    for (const GroupAndTransitions &gat : transition_system) {
+        const LabelGroup &label_group = gat.label_group;
+        const vector<Transition> &transitions = gat.transitions;
+        int cost = label_group.get_cost();
+        int secondary_cost = label_group.get_secondary_cost();
+        for (const Transition &transition : transitions) {
+            final_entry_backward_graph[transition.target].push_back(
+                {transition.src, cost, secondary_cost});
+        }
+    }
+}
+
+void Distances::recompute_goal_distances(int cost_bound) {
+
+    priority_queues::AdaptiveQueue<std::pair<int,int>> queue;
+    for (int state = 0; state < get_num_states(); ++state) {
+        if (transition_system.is_goal_state(state)) {
+            goal_distances[state] = 0;
+            queue.push(0, make_pair(state, 0));
+        }
+    }
+    bounded_dijkstra_search(final_entry_backward_graph, queue, goal_distances, cost_bound);
+
+}
+
 
 void Distances::compute_distances(
     bool compute_init_distances,

@@ -20,8 +20,9 @@ class LabelGroup {
     */
     std::list<int> labels;
     int cost;
+    int secondary_cost;
 public:
-    LabelGroup() : cost(INF) {
+    LabelGroup() : cost(INF), secondary_cost(INF) {
     }
 
     void set_cost(int cost_) {
@@ -55,6 +56,15 @@ public:
     int get_cost() const {
         return cost;
     }
+
+    int get_secondary_cost() const {
+        return secondary_cost;
+    }
+
+    void set_secondary_cost(int cost_) {
+        secondary_cost = cost_;
+    }
+
 };
 
 class LabelEquivalenceRelation {

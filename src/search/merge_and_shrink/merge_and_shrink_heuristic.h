@@ -13,6 +13,7 @@ namespace merge_and_shrink {
 class FactoredTransitionSystem;
 class LabelReduction;
 class MergeAndShrinkRepresentation;
+class Distances;
 class MergeStrategyFactory;
 class ShrinkStrategy;
 class TransitionSystem;
@@ -42,6 +43,7 @@ class MergeAndShrinkHeuristic : public Heuristic {
     long starting_peak_memory;
     // The final merge-and-shrink representation, storing goal distances.
     std::unique_ptr<MergeAndShrinkRepresentation> mas_representation;
+    std::unique_ptr<Distances> mas_distances;
 
     void finalize_factor(FactoredTransitionSystem &fts, int index);
     int prune_fts(FactoredTransitionSystem &fts, const utils::Timer &timer) const;
@@ -53,6 +55,7 @@ class MergeAndShrinkHeuristic : public Heuristic {
     void warn_on_unusual_options() const;
 protected:
     virtual int compute_heuristic(const GlobalState &global_state) override;
+    virtual int compute_heuristic_w_bound(const GlobalState &state, int cost_bound);
 public:
     explicit MergeAndShrinkHeuristic(const options::Options &opts);
     virtual ~MergeAndShrinkHeuristic() override = default;

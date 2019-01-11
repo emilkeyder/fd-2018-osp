@@ -27,15 +27,21 @@ void Labels::reduce_labels(const vector<int> &old_label_nos) {
       labels reduced to it to satisfy admissibility.
     */
     int new_label_cost = INF;
+    int new_label_secondary_cost = INF;
     for (size_t i = 0; i < old_label_nos.size(); ++i) {
         int old_label_no = old_label_nos[i];
         int cost = get_label_cost(old_label_no);
         if (cost < new_label_cost) {
             new_label_cost = cost;
         }
+        int secondary_cost = get_label_secondary_cost(old_label_no);
+        if (secondary_cost < new_label_secondary_cost) {
+            new_label_secondary_cost = secondary_cost;
+        }
+
         labels[old_label_no] = nullptr;
     }
-    labels.push_back(utils::make_unique_ptr<Label>(new_label_cost));
+    labels.push_back(utils::make_unique_ptr<Label>(new_label_cost, new_label_secondary_cost));
 }
 
 bool Labels::is_current_label(int label_no) const {
@@ -48,12 +54,18 @@ int Labels::get_label_cost(int label_no) const {
     return labels[label_no]->get_cost();
 }
 
+int Labels::get_label_secondary_cost(int label_no) const {
+    assert(labels[label_no]);
+    return labels[label_no]->get_secondary_cost();
+}
+
 void Labels::dump_labels() const {
     cout << "active labels:" << endl;
     for (size_t label_no = 0; label_no < labels.size(); ++label_no) {
         if (labels[label_no]) {
             cout << "label " << label_no
                  << ", cost " << labels[label_no]->get_cost()
+                 << ", secondary cost " << labels[label_no]->get_secondary_cost()
                  << endl;
         }
     }
