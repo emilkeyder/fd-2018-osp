@@ -11,13 +11,17 @@ class Label {
       Labels are opaque tokens that have an associated cost.
     */
     int cost;
+    int secondary_cost;
 public:
-    explicit Label(int cost_)
-        : cost(cost_) {
+    explicit Label(int cost_, int secondary_cost_)
+        : cost(cost_), secondary_cost(secondary_cost_) {
     }
     ~Label() {}
     int get_cost() const {
         return cost;
+    }
+    int get_secondary_cost() const {
+        return secondary_cost;
     }
 };
 
@@ -33,6 +37,7 @@ public:
     void reduce_labels(const std::vector<int> &old_label_nos);
     bool is_current_label(int label_no) const;
     int get_label_cost(int label_no) const;
+    int get_label_secondary_cost(int label_no) const;
     void dump_labels() const;
     int get_size() const {
         return labels.size();

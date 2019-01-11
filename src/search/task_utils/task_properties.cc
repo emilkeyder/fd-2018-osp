@@ -84,6 +84,22 @@ int get_min_operator_cost(TaskProxy task_proxy) {
     return min_cost;
 }
 
+int get_max_operator_cost(TaskProxy task_proxy) {
+    int max_cost = 0;
+    for (OperatorProxy op : task_proxy.get_operators()) {
+        max_cost = max(max_cost, op.get_cost());
+    }
+    return max_cost;
+}
+
+int get_max_bounded_operator_cost(TaskProxy task_proxy) {
+    int max_cost = 0;
+    for (OperatorProxy op : task_proxy.get_operators()) {
+        max_cost = max(max_cost, op.get_bounded_cost());
+    }
+    return max_cost;
+}
+
 void print_variable_statistics(const TaskProxy &task_proxy) {
     const int_packer::IntPacker &state_packer = g_state_packers[task_proxy];
 

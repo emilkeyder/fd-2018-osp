@@ -69,6 +69,8 @@ extern void verify_no_conditional_effects(TaskProxy task);
 extern std::vector<int> get_operator_costs(const TaskProxy &task_proxy);
 extern double get_average_operator_cost(TaskProxy task_proxy);
 extern int get_min_operator_cost(TaskProxy task_proxy);
+extern int get_max_operator_cost(TaskProxy task_proxy);
+extern int get_max_bounded_operator_cost(TaskProxy task_proxy);
 
 template<class FactProxyCollection>
 std::vector<FactPair> get_fact_pairs(const FactProxyCollection &facts) {

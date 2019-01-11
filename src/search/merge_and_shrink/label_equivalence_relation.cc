@@ -50,6 +50,7 @@ LabelEquivalenceRelation::LabelEquivalenceRelation(
             label_to_positions[other_label_no] = make_pair(group_id, label_it);
         }
         label_group.set_cost(other_label_group.get_cost());
+        label_group.set_secondary_cost(other_label_group.get_secondary_cost());
     }
 }
 
@@ -61,6 +62,11 @@ void LabelEquivalenceRelation::add_label_to_group(int group_id,
     int label_cost = labels.get_label_cost(label_no);
     if (label_cost < grouped_labels[group_id].get_cost())
         grouped_labels[group_id].set_cost(label_cost);
+
+    int label_secondary_cost = labels.get_label_secondary_cost(label_no);
+    if (label_secondary_cost < grouped_labels[group_id].get_secondary_cost())
+        grouped_labels[group_id].set_secondary_cost(label_secondary_cost);
+
 }
 
 void LabelEquivalenceRelation::apply_label_mapping(
@@ -99,6 +105,10 @@ void LabelEquivalenceRelation::apply_label_mapping(
                 int cost = labels.get_label_cost(label_no);
                 if (cost < label_group.get_cost()) {
                     label_group.set_cost(cost);
+                }
+                int secondary_cost = labels.get_label_secondary_cost(label_no);
+                if (secondary_cost < label_group.get_secondary_cost()) {
+                    label_group.set_secondary_cost(secondary_cost);
                 }
             }
         }
