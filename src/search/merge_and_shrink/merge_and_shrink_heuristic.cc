@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <tuple>
 
 using namespace std;
 using utils::ExitCode;
@@ -164,10 +165,11 @@ void MergeAndShrinkHeuristic::warn_on_unusual_options() const {
 
 void MergeAndShrinkHeuristic::finalize_factor(
     FactoredTransitionSystem &fts, int index) {
-    pair<unique_ptr<MergeAndShrinkRepresentation>, unique_ptr<Distances>>
+    tuple<unique_ptr<MergeAndShrinkRepresentation>, unique_ptr<Distances>, unique_ptr<TransitionSystem>>
     final_entry = fts.extract_factor(index);
-    mas_representation = move(final_entry.first);
-    mas_distances = move(final_entry.second);
+    mas_representation = move(get<0>(final_entry));
+    mas_distances = move(get<1>(final_entry));
+    mas_transition_system = move(get<2>(final_entry));
     if (!mas_distances->are_goal_distances_computed()) {
         const bool compute_init = false;
         const bool compute_goal = true;
