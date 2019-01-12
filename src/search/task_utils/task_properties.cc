@@ -131,6 +131,33 @@ void dump_fdr(const State &state) {
     }
 }
 
+void dump_operator_fdr(const OperatorProxy op) {
+    cout << "Operator " << op.get_name() <<  endl;
+    cout << "Preconditions:" << endl;
+    for (FactProxy fact : op.get_preconditions()) {    
+        VariableProxy var = fact.get_variable();
+        cout << "  #" << var.get_id() << " [" << var.get_name() << "] -> "
+             << fact.get_value() << endl;
+    }
+    cout << "Effects:" << endl;
+    for (EffectProxy eff : op.get_effects()) {
+        cout << "Condition:" << endl;
+        for (FactProxy fact : eff.get_conditions()) {    
+            VariableProxy var = fact.get_variable();
+            cout << "  #" << var.get_id() << " [" << var.get_name() << "] -> "
+                 << fact.get_value() << endl;
+        }
+        cout << "Effect: ";
+        FactProxy fact = eff.get_fact();
+        VariableProxy var = fact.get_variable();
+        cout << "  #" << var.get_id() << " [" << var.get_name() << "] -> "
+             << fact.get_value() << endl;
+    }
+    cout << "cost: " << op.get_cost() << endl;
+    cout << "bounded cost: " << op.get_bounded_cost() << endl;
+    
+}
+
 void dump_goals(const GoalsProxy &goals) {
     cout << "Goal conditions:" << endl;
     for (FactProxy goal : goals) {
@@ -165,6 +192,9 @@ void dump_task(const TaskProxy &task_proxy) {
     cout << "Initial state (FDR):" << endl;
     dump_fdr(initial_state);
     dump_goals(task_proxy.get_goals());
+    cout << "Operators:" << endl;
+    for (OperatorProxy op : operators)
+        dump_operator_fdr(op);
 }
 
 PerTaskInformation<int_packer::IntPacker> g_state_packers(

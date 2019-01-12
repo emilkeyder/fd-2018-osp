@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 
 namespace merge_and_shrink {
 class Distances;
@@ -119,8 +120,8 @@ public:
     /*
       Extract the factor at the given index, rendering the FTS invalid.
     */
-    std::pair<std::unique_ptr<MergeAndShrinkRepresentation>,
-              std::unique_ptr<Distances>> extract_factor(int index);
+    std::tuple<std::unique_ptr<MergeAndShrinkRepresentation>, std::unique_ptr<Distances>, std::unique_ptr<TransitionSystem>>
+                extract_factor(int index);
 
     void statistics(int index) const;
     void dump(int index) const;

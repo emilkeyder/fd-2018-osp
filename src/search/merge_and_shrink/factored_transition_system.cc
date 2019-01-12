@@ -195,11 +195,11 @@ int FactoredTransitionSystem::merge(
     return new_index;
 }
 
-pair<unique_ptr<MergeAndShrinkRepresentation>, unique_ptr<Distances>>
+tuple<unique_ptr<MergeAndShrinkRepresentation>, unique_ptr<Distances>, unique_ptr<TransitionSystem>>
 FactoredTransitionSystem::extract_factor(int index) {
     assert(is_component_valid(index));
-    return make_pair(move(mas_representations[index]),
-                     move(distances[index]));
+    return make_tuple(move(mas_representations[index]), 
+                     move(distances[index]), move(transition_systems[index]));
 }
 
 void FactoredTransitionSystem::statistics(int index) const {
