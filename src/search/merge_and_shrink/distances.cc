@@ -127,36 +127,31 @@ static void dijkstra_search(
 }
 
 static void bounded_dijkstra_search(
-    const vector<vector<merge_and_shrink::bnode>> &graph,
-    priority_queues::AdaptiveQueue<std::pair<int,int>> &queue,
-    vector<int> &distances, int bound) {
+    const vector<vector<pair<int, int>>> &graph,
+    priority_queues::AdaptiveQueue<int> &queue,
+    vector<int> &distances, int bound, int from_state, const vector<vector<int>> &bounded_cost_distances) {
     while (!queue.empty()) {
-        pair<int, pair<int,int>> top_pair = queue.pop();
+        pair<int, int> top_pair = queue.pop();
         int distance = top_pair.first;
-        int state = top_pair.second.first;
-        int secondary_distance = top_pair.second.second;
+        int state = top_pair.second;
         int state_distance = distances[state];
         assert(state_distance <= distance);
         if (state_distance < distance)
             continue;
         for (size_t i = 0; i < graph[state].size(); ++i) {
-            const merge_and_shrink::bnode &transition = graph[state][i];
-            int secondary_cost = transition.secondary_cost;
-            int successor_secondary_cost = secondary_distance + secondary_cost;
-            if (successor_secondary_cost > bound)
+            const pair<int, int> &transition = graph[state][i];
+            int successor = transition.first;
+            if (bounded_cost_distances[from_state][successor] > bound)
                 continue;
-            int successor = transition.src;
-            int cost = transition.cost;
+            int cost = transition.second;
             int successor_cost = state_distance + cost;
             if (distances[successor] > successor_cost) {
                 distances[successor] = successor_cost;
-                queue.push(successor_cost, make_pair(successor, successor_secondary_cost));
+                queue.push(successor_cost, successor);
             }
         }
     }
 }
-
-
 
 void Distances::compute_init_distances_general_cost() {
     vector<vector<pair<int, int>>> forward_graph(get_num_states());
@@ -214,28 +209,81 @@ void Distances::build_final_backward_graph() {
         const LabelGroup &label_group = gat.label_group;
         const vector<Transition> &transitions = gat.transitions;
         int cost = label_group.get_cost();
-        int secondary_cost = label_group.get_secondary_cost();
         for (const Transition &transition : transitions) {
             final_entry_backward_graph[transition.target].push_back(
-                {transition.src, cost, secondary_cost});
+                make_pair(transition.src, cost));
         }
     }
 }
 
-void Distances::recompute_goal_distances(int cost_bound) {
+void Distances::recompute_goal_distances(int from_state, int cost_bound) {
     // Resetting goal_distances to INF
     vector<int> new_distances(get_num_states(), INF);
     goal_distances.swap(new_distances);
-    
-    priority_queues::AdaptiveQueue<std::pair<int,int>> queue;
+//    cout << "Recomputing distances from state " << from_state << " with cost bound " << cost_bound << endl;
+    priority_queues::AdaptiveQueue<int> queue;
     for (int state = 0; state < get_num_states(); ++state) {
+//        cout << " State " << state << " init distance " << init_distances_bounded_cost[from_state][state] << endl;
+        if (init_distances_bounded_cost[from_state][state] > cost_bound)
+            continue;
         if (transition_system.is_goal_state(state)) {
             goal_distances[state] = 0;
-            queue.push(0, make_pair(state, 0));
+            queue.push(0, state);
+//            cout << "Added goal state " << state << " to the queue" << endl;
         }
     }
-    bounded_dijkstra_search(final_entry_backward_graph, queue, goal_distances, cost_bound);
+    bounded_dijkstra_search(final_entry_backward_graph, queue, goal_distances, cost_bound, from_state, init_distances_bounded_cost);
+//    cout << "Distances after recomputing with cost bound " << cost_bound << endl;
+//    dump();
+}
 
+void Distances::compute_initial_distances_bounded_cost(int cost_bound) {
+    // Performing Floyd-Warshall to get the pairwise distances
+    // Computing how many of the pairs are below the bound
+    cout << "Performing Floyd-Warshall to get the pairwise distances, bound: " << cost_bound << endl; 
+    assert(init_distances_bounded_cost.empty());
+    // Initializing to infinity
+    for (int state = 0; state < get_num_states(); ++state) {
+        init_distances_bounded_cost.push_back(vector<int>(get_num_states(), INF));
+        init_distances_bounded_cost[state][state] = 0;
+    }    
+    // Initial weights by edges
+    for (const GroupAndTransitions &gat : transition_system) {
+        const LabelGroup &label_group = gat.label_group;
+        const vector<Transition> &transitions = gat.transitions;
+        int secondary_cost = label_group.get_secondary_cost();
+        for (const Transition &transition : transitions) {
+            if (transition.src == transition.target)
+                continue;
+            init_distances_bounded_cost[transition.src][transition.target] = secondary_cost;
+        }
+    }
+    // O(n^3) iterations
+    for (int v = 0; v < get_num_states(); ++v) {
+        for (int s = 0; s < get_num_states(); ++s) {
+            if (init_distances_bounded_cost[s][v] == INF)
+                continue;
+            for (int t = 0; t < get_num_states(); ++t) {
+                if (init_distances_bounded_cost[v][t] == INF) 
+                    continue;
+                if (init_distances_bounded_cost[s][t] > init_distances_bounded_cost[s][v] + init_distances_bounded_cost[v][t])
+                    init_distances_bounded_cost[s][t] = init_distances_bounded_cost[s][v] + init_distances_bounded_cost[v][t];
+            }
+        }
+    }
+    int count_num_valid_pairs = 0;
+    // Statistics computation: how many of the stored n^2 pairs are actually under the possible bound
+    int init = transition_system.get_init_state();
+    for (int s = 0; s < get_num_states(); ++s) {
+        for (int t = 0; t < get_num_states(); ++t) {
+            if (init_distances_bounded_cost[s][t] == INF)
+                continue;
+            if (init_distances_bounded_cost[init][s] + init_distances_bounded_cost[s][t] > cost_bound)
+                continue;
+            count_num_valid_pairs++;
+        }
+    }
+    cout << "Number of valid pairs: " << count_num_valid_pairs << " out of " << get_num_states() * get_num_states() << endl;
 }
 
 
@@ -412,6 +460,17 @@ void Distances::apply_abstraction(
 }
 
 void Distances::dump() const {
+    cout << "Bounded cost distances: " << endl;
+    for (size_t i = 0; i < init_distances_bounded_cost.size(); ++i) {
+        for (size_t j = 0; j < init_distances_bounded_cost[i].size(); ++j) {
+            if (init_distances_bounded_cost[i][j] == INF)
+                continue;
+            cout << i <<  " -> " << j << ": " << init_distances_bounded_cost[i][j] << ", ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+
     cout << "Distances: ";
     for (size_t i = 0; i < goal_distances.size(); ++i) {
         cout << i << ": " << goal_distances[i] << ", ";

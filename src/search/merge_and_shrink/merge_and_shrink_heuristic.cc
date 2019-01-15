@@ -170,6 +170,7 @@ void MergeAndShrinkHeuristic::finalize_factor(
     mas_representation = move(get<0>(final_entry));
     mas_distances = move(get<1>(final_entry));
     mas_transition_system = move(get<2>(final_entry));
+    /*
     if (!mas_distances->are_goal_distances_computed()) {
         const bool compute_init = false;
         const bool compute_goal = true;
@@ -177,6 +178,10 @@ void MergeAndShrinkHeuristic::finalize_factor(
             compute_init, compute_goal, verbosity);
     }
     assert(mas_distances->are_goal_distances_computed());
+    */
+    cout << "Computing initial distances according to the bounded cost" << endl;   
+    mas_distances->compute_initial_distances_bounded_cost(task_proxy.get_cost_bound());
+    cout << "Building final backward graph" << endl;   
     mas_distances->build_final_backward_graph();
     //mas_representation->set_distances(*mas_distances);    
 }
@@ -409,10 +414,12 @@ int MergeAndShrinkHeuristic::compute_heuristic(const GlobalState &global_state) 
 
 int MergeAndShrinkHeuristic::compute_heuristic_w_bound(const GlobalState &global_state, int cost_bound) {
     State state = convert_global_state(global_state);
-    // Recomputing goal distances from the current state, using cost bound for the secondary cost function
-    mas_distances->recompute_goal_distances(cost_bound);
-
     int abstract_state = mas_representation->get_value(state);
+
+    // Recomputing goal distances from the current state, using cost bound for the secondary cost function
+    mas_distances->recompute_goal_distances(abstract_state, cost_bound);
+    //mas_transition_system->dump_dot_graph();
+    //cout << "Abstract state: " << abstract_state << endl;
     int cost = mas_distances->get_goal_distance(abstract_state);
     if (cost == PRUNED_STATE || cost == INF) {
         // If state is unreachable or irrelevant, we encountered a dead end.
