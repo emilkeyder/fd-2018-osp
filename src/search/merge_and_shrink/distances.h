@@ -41,7 +41,9 @@ class Distances {
 
 
 
-    std::vector<std::vector<bnode>> final_entry_backward_graph;
+    std::vector<std::vector<std::pair<int, int>>> final_entry_backward_graph;
+    std::vector<std::vector<int>> init_distances_bounded_cost;
+    
 
 public:
     explicit Distances(const TransitionSystem &transition_system);
@@ -57,7 +59,8 @@ public:
 
     void build_final_backward_graph();
     /* Currently, computing from goal states for all states */
-    void recompute_goal_distances(int cost_bound);
+    void recompute_goal_distances(int from_state, int cost_bound);
+    void compute_initial_distances_bounded_cost(int cost_bound);
 
     void compute_distances(
         bool compute_init_distances,

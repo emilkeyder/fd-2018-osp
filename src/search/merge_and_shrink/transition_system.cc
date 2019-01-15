@@ -488,7 +488,7 @@ void TransitionSystem::dump_dot_graph() const {
                  label_it != label_group.end(); ++label_it) {
                 if (label_it != label_group.begin())
                     cout << "_";
-                cout << "x" << *label_it;
+                cout << "x" << *label_it << "("<< label_group.get_cost() <<","<< label_group.get_secondary_cost()<<")";
             }
             cout << "];" << endl;
         }
