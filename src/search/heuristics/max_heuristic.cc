@@ -5,6 +5,7 @@
 #include "../plugin.h"
 
 #include <cassert>
+#include <limits>
 #include <vector>
 using namespace std;
 
@@ -32,7 +33,7 @@ HSPMaxHeuristic::~HSPMaxHeuristic() {
 }
 
 // heuristic computation
-void HSPMaxHeuristic::setup_exploration_queue() {
+void HSPMaxHeuristic::setup_exploration_queue(int bound) {
     queue.clear();
 
     for (vector<Proposition> &props_of_var : propositions) {
@@ -46,8 +47,10 @@ void HSPMaxHeuristic::setup_exploration_queue() {
         op.unsatisfied_preconditions = op.precondition.size();
         op.cost = op.base_cost; // will be increased by precondition costs
 
-        if (op.unsatisfied_preconditions == 0)
+        if (op.unsatisfied_preconditions == 0 &&
+	    (!use_cost_bound || op.base_bounded_cost <= bound)) {
             enqueue_if_necessary(op.effect, op.base_cost);
+	}
     }
 }
 
@@ -85,14 +88,17 @@ void HSPMaxHeuristic::relaxed_exploration() {
 
 int HSPMaxHeuristic::compute_heuristic_w_bound(
     const GlobalState &global_state, int cost_bound) {
-  (void) cost_bound;
-  return compute_heuristic(global_state);
+  return compute_heuristic(global_state, cost_bound);
 }
 
 int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state) {
+  return compute_heuristic(global_state, std::numeric_limits<int>::max());
+}
+
+int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost_bound) {
     const State state = convert_global_state(global_state);
 
-    setup_exploration_queue();
+    setup_exploration_queue(cost_bound);
     setup_exploration_queue_state(state);
     relaxed_exploration();
 

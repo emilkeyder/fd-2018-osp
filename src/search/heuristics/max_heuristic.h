@@ -14,7 +14,7 @@ using relaxation_heuristic::UnaryOperator;
 class HSPMaxHeuristic : public relaxation_heuristic::RelaxationHeuristic {
     priority_queues::AdaptiveQueue<Proposition *> queue;
 
-    void setup_exploration_queue();
+    void setup_exploration_queue(int bound);
     void setup_exploration_queue_state(const State &state);
     void relaxed_exploration();
 
@@ -30,6 +30,7 @@ class HSPMaxHeuristic : public relaxation_heuristic::RelaxationHeuristic {
     bool use_cost_bound;
 
 protected:
+    int compute_heuristic(const GlobalState &global_state, int cost_bound);
     virtual int compute_heuristic(const GlobalState &global_state) override;
     virtual int compute_heuristic_w_bound(
 	const GlobalState &global_state, int cost_bound) override;
