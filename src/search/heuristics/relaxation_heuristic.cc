@@ -76,7 +76,8 @@ void RelaxationHeuristic::build_unary_operators(const OperatorProxy &op, int op_
         for (FactProxy eff_cond : eff_conds) {
             precondition_props.push_back(get_proposition(eff_cond));
         }
-        unary_operators.push_back(UnaryOperator(precondition_props, effect_prop, op_no, base_cost));
+        unary_operators.push_back(UnaryOperator(precondition_props, effect_prop, op_no,
+						base_cost, op.get_bounded_cost()));
         precondition_props.erase(precondition_props.end() - eff_conds.size(), precondition_props.end());
     }
 }
