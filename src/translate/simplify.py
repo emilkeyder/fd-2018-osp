@@ -500,7 +500,9 @@ class VarValueRenaming(object):
         for tr in util_triplets:
             new_var_no, new_value, uval = self.translate_triplet(tr)
             if new_value is always_false:
-                raise Impossible
+                # This is not valid for soft goal problems.
+                # raise Impossible
+                continue
             elif new_value is not always_true:
                 assert new_var_no is not None
                 new_triplets.append((new_var_no, new_value, uval))
