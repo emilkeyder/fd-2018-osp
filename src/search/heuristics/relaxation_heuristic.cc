@@ -124,9 +124,14 @@ void RelaxationHeuristic::simplify() {
             Map::iterator iter = inserted.first;
             int old_op_no = iter->second;
             int old_cost = unary_operators[old_op_no].base_cost;
+	    int old_bounded_cost = unary_operators[old_op_no].base_bounded_cost;
+
             int new_cost = unary_operators[i].base_cost;
-            if (new_cost < old_cost)
+	    int new_bounded_cost = unary_operators[i].base_bounded_cost;
+
+            if (new_cost < old_cost && new_bounded_cost < old_bounded_cost) {
                 iter->second = i;
+	    }
             assert(unary_operators[unary_operator_index[key]].base_cost ==
                    min(old_cost, new_cost));
         }
@@ -151,9 +156,11 @@ void RelaxationHeuristic::simplify() {
                     dominating_key);
                 if (found != unary_operator_index.end()) {
                     int my_cost = old_unary_operators[unary_operator_no].base_cost;
+		    int my_bounded_cost = old_unary_operators[unary_operator_no].base_bounded_cost;
                     int dominator_op_no = found->second;
                     int dominator_cost = old_unary_operators[dominator_op_no].base_cost;
-                    if (dominator_cost <= my_cost) {
+                    int dominator_bounded_cost = old_unary_operators[dominator_op_no].base_bounded_cost;
+                    if (dominator_cost <= my_cost && dominator_bounded_cost <= my_bounded_cost) {
                         match = true;
                         break;
                     }
