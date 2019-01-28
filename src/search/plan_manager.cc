@@ -91,7 +91,13 @@ void PlanManager::save_plan(
     outfile << "; cost = " << plan_cost << " ("
             << (is_unit_cost ? "unit cost" : "general cost") << ")" << endl;
     outfile.close();
-    cout << "Plan length: " << plan.size() << " step(s)." << endl;
+
+    int plan_size = 0;
+    for (const OperatorID op_id : plan) {
+      if (!is_soft_goal_action(operators[op_id])) ++plan_size;
+    }
+
+    cout << "Plan length: " << plan_size << " step(s)." << endl;
     cout << "Plan cost: " << plan_cost << endl;
 
     int plan_utility = task_proxy.get_state_utility(gs);
