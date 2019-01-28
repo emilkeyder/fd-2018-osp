@@ -56,7 +56,7 @@ class MergeAndShrinkHeuristic : public Heuristic {
     void warn_on_unusual_options() const;
 protected:
     virtual int compute_heuristic(const GlobalState &global_state) override;
-    virtual int compute_heuristic_w_bound(const GlobalState &state, int cost_bound);
+    virtual int compute_heuristic_w_bound(const GlobalState &state, int cost_bound) override;
 public:
     explicit MergeAndShrinkHeuristic(const options::Options &opts);
     virtual ~MergeAndShrinkHeuristic() override = default;
