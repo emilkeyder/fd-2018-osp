@@ -25,6 +25,7 @@ namespace max_heuristic {
 HSPMaxHeuristic::HSPMaxHeuristic(const Options &opts)
   : RelaxationHeuristic(opts), use_cost_bound(opts.get<bool>("use_cost_bound")) {
     cout << "Initializing HSP max heuristic..." << endl;
+    cout << "use_cost_bound = " << (use_cost_bound ? "true" : "false") << endl;
 }
 
 HSPMaxHeuristic::~HSPMaxHeuristic() {
