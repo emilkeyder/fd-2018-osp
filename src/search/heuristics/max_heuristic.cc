@@ -23,7 +23,7 @@ namespace max_heuristic {
 
 // construction and destruction
 HSPMaxHeuristic::HSPMaxHeuristic(const Options &opts)
-    : RelaxationHeuristic(opts) {
+  : RelaxationHeuristic(opts), use_cost_bound(opts.get<bool>("use_cost_bound")) {
     cout << "Initializing HSP max heuristic..." << endl;
 }
 
@@ -120,6 +120,9 @@ static shared_ptr<Heuristic> _parse(OptionParser &parser) {
     parser.document_property("consistent", "yes for tasks without axioms");
     parser.document_property("safe", "yes for tasks without axioms");
     parser.document_property("preferred operators", "no");
+
+    parser.add_option<bool>("use_cost_bound",
+			    "Use or ignore passed in secondary cost bound", "true");
 
     Heuristic::add_options_to_parser(parser);
     Options opts = parser.parse();
