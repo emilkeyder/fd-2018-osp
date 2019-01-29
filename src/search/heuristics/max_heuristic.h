@@ -16,14 +16,22 @@ class HSPMaxHeuristic : public relaxation_heuristic::RelaxationHeuristic {
 
     void setup_exploration_queue(int bound);
     void setup_exploration_queue_state(const State &state);
-    void relaxed_exploration();
+    void relaxed_exploration(int bound);
 
-    void enqueue_if_necessary(Proposition *prop, int cost) {
+    void enqueue_if_necessary(Proposition *prop, int cost, int bounded_cost) {
         assert(cost >= 0);
+	bool enqueue = false;
         if (prop->cost == -1 || prop->cost > cost) {
             prop->cost = cost;
-            queue.push(cost, prop);
+	    enqueue = true;
         }
+	if (prop->bounded_cost == -1 || prop->bounded_cost > bounded_cost) {
+	  prop->bounded_cost = bounded_cost;
+	  enqueue = true;
+	}
+	if (enqueue) {
+	  queue.push(prop->cost, prop);
+	}
         assert(prop->cost != -1 && prop->cost <= cost);
     }
 
@@ -35,6 +43,15 @@ protected:
     virtual int compute_heuristic_w_bound(
 	const GlobalState &global_state, int cost_bound) override;
 public:
+    virtual void notify_state_transition(const GlobalState &parent_state,
+                                         OperatorID op_id,
+                                         const GlobalState &state) override;
+
+    virtual void get_path_dependent_evaluators(
+        std::set<Evaluator *> &evals) override {
+        evals.insert(this);
+    }
+
     HSPMaxHeuristic(const options::Options &opts);
     ~HSPMaxHeuristic();
 };
