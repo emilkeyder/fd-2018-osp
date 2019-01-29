@@ -39,6 +39,7 @@ void HSPMaxHeuristic::setup_exploration_queue(int bound) {
     for (vector<Proposition> &props_of_var : propositions) {
         for (Proposition &prop : props_of_var) {
             prop.cost = -1;
+	    prop.bounded_cost = -1;
         }
     }
 
@@ -46,10 +47,11 @@ void HSPMaxHeuristic::setup_exploration_queue(int bound) {
     for (UnaryOperator &op : unary_operators) {
         op.unsatisfied_preconditions = op.precondition.size();
         op.cost = op.base_cost; // will be increased by precondition costs
+	op.bounded_cost = op.base_bounded_cost;
 
         if (op.unsatisfied_preconditions == 0 &&
-	    (!use_cost_bound || op.base_bounded_cost <= bound)) {
-            enqueue_if_necessary(op.effect, op.base_cost);
+	    (!use_cost_bound || op.bounded_cost <= bound)) {
+            enqueue_if_necessary(op.effect, op.cost, op.bounded_cost);
 	}
     }
 }
@@ -57,31 +59,54 @@ void HSPMaxHeuristic::setup_exploration_queue(int bound) {
 void HSPMaxHeuristic::setup_exploration_queue_state(const State &state) {
     for (FactProxy fact : state) {
         Proposition *init_prop = get_proposition(fact);
-        enqueue_if_necessary(init_prop, 0);
+        enqueue_if_necessary(init_prop, 0, 0);
     }
 }
 
-void HSPMaxHeuristic::relaxed_exploration() {
+void HSPMaxHeuristic::relaxed_exploration(int cost_bound) {
     int unsolved_goals = goal_propositions.size();
     while (!queue.empty()) {
         pair<int, Proposition *> top_pair = queue.pop();
         int distance = top_pair.first;
         Proposition *prop = top_pair.second;
+
         int prop_cost = prop->cost;
+	int prop_bounded_cost = prop->bounded_cost;
+
+	// May have decreased since we enqueued it.
         assert(prop_cost <= distance);
-        if (prop_cost < distance)
+
+// 	cout << prop_names_dict[prop->id]
+// 	     << " with cost " << prop_cost << ", bounded cost " << prop_bounded_cost << endl;
+
+	if (use_cost_bound && prop_bounded_cost > cost_bound) {
+// 	  cout << "Skipping proposition " << prop_names_dict[prop->id]
+// 	       << " with bounded cost " << prop_bounded_cost << endl;
+	  continue;
+	}
+        if (prop_cost < distance) {
             continue;
-        if (prop->is_goal && --unsolved_goals == 0)
+	}
+        if (prop->is_goal && --unsolved_goals == 0) {
             return;
+	}
         const vector<UnaryOperator *> &triggered_operators =
             prop->precondition_of;
         for (UnaryOperator *unary_op : triggered_operators) {
             --unary_op->unsatisfied_preconditions;
             unary_op->cost = max(unary_op->cost,
                                  unary_op->base_cost + prop_cost);
+	    unary_op->bounded_cost = max(unary_op->bounded_cost, 
+					 unary_op->base_bounded_cost + prop_bounded_cost);
+
+// 	    cout << "Unary op " << task_proxy.get_operators()[unary_op->operator_no].get_name()
+// 		 << " with cost " << unary_op->cost << " and bounded cost "
+// 		 << unary_op->bounded_cost << endl;
+
             assert(unary_op->unsatisfied_preconditions >= 0);
-            if (unary_op->unsatisfied_preconditions == 0)
-                enqueue_if_necessary(unary_op->effect, unary_op->cost);
+            if (unary_op->unsatisfied_preconditions == 0) {
+	      enqueue_if_necessary(unary_op->effect, unary_op->cost, unary_op->bounded_cost);
+	    }
         }
     }
 }
@@ -96,22 +121,39 @@ int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state) {
 }
 
 int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost_bound) {
+//    cout << "Evaluating state with cost bound " << cost_bound << endl;
+//    global_state.dump_pddl();
+
     const State state = convert_global_state(global_state);
+
+    int total_cost = 0;
 
     setup_exploration_queue(cost_bound);
     setup_exploration_queue_state(state);
-    relaxed_exploration();
-
-    int total_cost = 0;
+    relaxed_exploration(cost_bound);
+    
+    total_cost = 0;
     for (Proposition *prop : goal_propositions) {
-        int prop_cost = prop->cost;
-        if (prop_cost == -1) {
-            return DEAD_END;
-        }
-        total_cost = max(total_cost, prop_cost);
+      int prop_cost = prop->cost;
+      if (prop_cost == -1) {
+	return DEAD_END;
+      }
+      total_cost = max(total_cost, prop_cost);
     }
 
     return total_cost;
+}
+
+  void HSPMaxHeuristic::notify_state_transition(
+    const GlobalState &parent_state, OperatorID op_id,
+    const GlobalState &state) {
+    (void) parent_state;
+    (void) op_id;
+    if (cache_evaluator_values && use_cost_bound) {
+        /* TODO:  It may be more efficient to check that the reached landmark
+           set has actually changed and only then mark the h value as dirty. */
+        heuristic_cache[state].dirty = true;
+    }
 }
 
 static shared_ptr<Heuristic> _parse(OptionParser &parser) {
