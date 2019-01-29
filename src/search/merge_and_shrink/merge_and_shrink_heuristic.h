@@ -58,6 +58,22 @@ protected:
     virtual int compute_heuristic(const GlobalState &global_state) override;
     virtual int compute_heuristic_w_bound(const GlobalState &state, int cost_bound) override;
 public:
+    virtual void notify_state_transition(const GlobalState &parent_state, OperatorID op_id,
+					 const GlobalState &state) override{
+      (void) parent_state;
+      (void) op_id;
+      if (cache_evaluator_values) {
+        /* TODO:  It may be more efficient to check that the reached landmark
+           set has actually changed and only then mark the h value as dirty. */
+        heuristic_cache[state].dirty = true;
+      }
+    }
+    
+    virtual void get_path_dependent_evaluators(
+        std::set<Evaluator *> &evals) override {
+        evals.insert(this);
+    }
+
     explicit MergeAndShrinkHeuristic(const options::Options &opts);
     virtual ~MergeAndShrinkHeuristic() override = default;
     static void add_shrink_limit_options_to_parser(options::OptionParser &parser);
