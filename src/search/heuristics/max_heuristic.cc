@@ -154,7 +154,7 @@ int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost
            set has actually changed and only then mark the h value as dirty. */
         heuristic_cache[state].dirty = true;
     }
-}
+  }
 
 static shared_ptr<Heuristic> _parse(OptionParser &parser) {
     parser.document_synopsis("Max heuristic", "");
