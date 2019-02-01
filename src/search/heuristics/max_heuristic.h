@@ -6,13 +6,30 @@
 #include "../algorithms/priority_queues.h"
 
 #include <cassert>
+#include <queue>
 
 namespace max_heuristic {
 using relaxation_heuristic::Proposition;
 using relaxation_heuristic::UnaryOperator;
 
 class HSPMaxHeuristic : public relaxation_heuristic::RelaxationHeuristic {
-    priority_queues::AdaptiveQueue<Proposition *> queue;
+  // priority_queues::AdaptiveQueue<Proposition *> queue;
+
+  struct PQEntry {
+    std::pair<int, int> costs;
+    Proposition* prop;
+
+    bool operator> (const PQEntry& other) const {
+      if (costs.first > other.costs.first) return true;
+      if (costs.first == other.costs.first && costs.second > other.costs.second) return true;
+      return false;
+    };
+    
+    PQEntry(const std::pair<int,int>& costs, Proposition* prop) : 
+      costs(costs), prop(prop) {}
+  };
+  
+  std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>> queue;
 
     void setup_exploration_queue(int bound);
     void setup_exploration_queue_state(const State &state);
@@ -30,7 +47,7 @@ class HSPMaxHeuristic : public relaxation_heuristic::RelaxationHeuristic {
 	  enqueue = true;
 	}
 	if (enqueue) {
-	  queue.push(prop->cost, prop);
+	  queue.push(PQEntry(std::make_pair(prop->cost, prop->bounded_cost), prop));
 	}
         assert(prop->cost != -1 && prop->cost <= cost);
     }
