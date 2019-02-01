@@ -119,8 +119,9 @@ SearchStatus EagerSearch::step() {
     SearchNode node = n.first;
 
     GlobalState s = node.get_state();
-    if (check_goal_and_set_plan(s))
-        return SOLVED;
+    if (check_goal_and_set_plan(s)) {
+      return SOLVED;
+    }
 
     vector<OperatorID> applicable_ops;
     successor_generator.generate_applicable_ops(s, applicable_ops);

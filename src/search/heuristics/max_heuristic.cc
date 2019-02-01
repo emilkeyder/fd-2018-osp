@@ -34,7 +34,8 @@ HSPMaxHeuristic::~HSPMaxHeuristic() {
 
 // heuristic computation
 void HSPMaxHeuristic::setup_exploration_queue(int bound) {
-    queue.clear();
+  // queue.clear();
+  while (!queue.empty()) queue.pop();
 
     for (vector<Proposition> &props_of_var : propositions) {
         for (Proposition &prop : props_of_var) {
@@ -66,9 +67,17 @@ void HSPMaxHeuristic::setup_exploration_queue_state(const State &state) {
 void HSPMaxHeuristic::relaxed_exploration(int cost_bound) {
     int unsolved_goals = goal_propositions.size();
     while (!queue.empty()) {
-        pair<int, Proposition *> top_pair = queue.pop();
-        int distance = top_pair.first;
-        Proposition *prop = top_pair.second;
+      
+      // pair<int, Proposition *> top_pair = queue.pop();
+      // int distance = top_pair.first;
+      // Proposition *prop = top_pair.second;
+
+      PQEntry pq_entry = queue.top(); 
+      queue.pop();
+
+      int distance = pq_entry.costs.first;
+      int bounded_distance = pq_entry.costs.second;
+      Proposition *prop = pq_entry.prop;
 
         int prop_cost = prop->cost;
 	int prop_bounded_cost = prop->bounded_cost;
@@ -76,15 +85,15 @@ void HSPMaxHeuristic::relaxed_exploration(int cost_bound) {
 	// May have decreased since we enqueued it.
         assert(prop_cost <= distance);
 
-// 	cout << prop_names_dict[prop->id]
-// 	     << " with cost " << prop_cost << ", bounded cost " << prop_bounded_cost << endl;
+//  	cout << prop_names_dict[prop->id]
+//  	     << " with cost " << prop_cost << ", bounded cost " << prop_bounded_cost << endl;
 
 	if (use_cost_bound && prop_bounded_cost > cost_bound) {
-// 	  cout << "Skipping proposition " << prop_names_dict[prop->id]
-// 	       << " with bounded cost " << prop_bounded_cost << endl;
+//  	  cout << "Skipping proposition " << prop_names_dict[prop->id]
+//  	       << " with bounded cost " << prop_bounded_cost << endl;
 	  continue;
 	}
-        if (prop_cost < distance) {
+        if (prop_cost < distance || (prop_cost == distance && prop_bounded_cost < bounded_distance)) {
             continue;
 	}
         if (prop->is_goal && --unsolved_goals == 0) {
@@ -100,8 +109,9 @@ void HSPMaxHeuristic::relaxed_exploration(int cost_bound) {
 					 unary_op->base_bounded_cost + prop_bounded_cost);
 
 // 	    cout << "Unary op " << task_proxy.get_operators()[unary_op->operator_no].get_name()
-// 		 << " with cost " << unary_op->cost << " and bounded cost "
-// 		 << unary_op->bounded_cost << endl;
+// 		 << " has " << unary_op->unsatisfied_preconditions << " preconditions remaining "
+// 		 << "(cost: " << unary_op->cost << ", bounded cost: "
+// 		 << unary_op->bounded_cost << ")" << endl;
 
             assert(unary_op->unsatisfied_preconditions >= 0);
             if (unary_op->unsatisfied_preconditions == 0) {
@@ -121,8 +131,8 @@ int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state) {
 }
 
 int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost_bound) {
-//    cout << "Evaluating state with cost bound " << cost_bound << endl;
-//    global_state.dump_pddl();
+//     cout << "Evaluating state with cost bound " << cost_bound << endl;
+//     global_state.dump_pddl();
 
     const State state = convert_global_state(global_state);
 
@@ -141,6 +151,7 @@ int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost
       total_cost = max(total_cost, prop_cost);
     }
 
+    //    cout << "Returning total_cost = " << total_cost << endl << endl;
     return total_cost;
 }
 
