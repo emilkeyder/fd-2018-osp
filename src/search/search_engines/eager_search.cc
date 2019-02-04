@@ -134,6 +134,7 @@ SearchStatus EagerSearch::step() {
 
     // This evaluates the expanded state (again) to get preferred ops
     EvaluationContext eval_context(s, node.get_g(), false, &statistics, true, node.get_bounded_g());
+
     ordered_set::OrderedSet<OperatorID> preferred_operators;
     for (const shared_ptr<Evaluator> &preferred_operator_evaluator : preferred_operator_evaluators) {
         collect_preferred_operators(eval_context,
@@ -172,7 +173,7 @@ SearchStatus EagerSearch::step() {
             // TODO: Make this less fragile.
             int succ_g = node.get_g() + get_adjusted_cost(op, s);
             int succ_bounded_g = node.get_bounded_g() + op.get_bounded_cost();
-
+	    
             EvaluationContext eval_context(
                 succ_state, succ_g, is_preferred, &statistics, false, succ_bounded_g);
             statistics.inc_evaluated_states();
@@ -192,6 +193,7 @@ SearchStatus EagerSearch::step() {
         } else if ((succ_node.get_g() > node.get_g() + get_adjusted_cost(op, s)) ||
 		   (succ_node.get_g() == node.get_g() + get_adjusted_cost(op, s) &&
 		    (succ_node.get_bounded_g() > node.get_bounded_g() + op.get_bounded_cost()))) {
+
             // We found a new cheapest path to an open or closed state.
             if (reopen_closed_nodes) {
                 if (succ_node.is_closed()) {
@@ -204,6 +206,14 @@ SearchStatus EagerSearch::step() {
                     */
                     statistics.inc_reopened();
                 }
+		/*
+		cout << "Reopening node" << endl;
+		cout << "Successor g: " << succ_node.get_g() << ", now generated with g: "
+		     << node.get_g() + get_adjusted_cost(op, s) << endl;
+		cout << "Successor bounded g: " << succ_node.get_bounded_g() << ", now generated with bounded g: "
+		     << node.get_bounded_g() + op.get_bounded_cost() << endl;
+		*/
+
                 succ_node.reopen(node, op, get_adjusted_cost(op, s));
 
                 EvaluationContext eval_context(
