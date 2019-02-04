@@ -60,6 +60,7 @@ protected:
     virtual int compute_heuristic_w_bound(
 	const GlobalState &global_state, int cost_bound) override;
 public:
+    
     virtual void notify_state_transition(const GlobalState &parent_state,
                                          OperatorID op_id,
                                          const GlobalState &state) override;

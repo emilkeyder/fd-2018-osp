@@ -131,8 +131,9 @@ int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state) {
 }
 
 int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost_bound) {
-//     cout << "Evaluating state with cost bound " << cost_bound << endl;
-//     global_state.dump_pddl();
+//   static int h_eval_count = 0;
+//   cout << "Evaluating state with cost bound " << cost_bound << "(" << h_eval_count++ << " evals done so far)" << endl;
+//   global_state.dump_pddl();
 
     const State state = convert_global_state(global_state);
 
@@ -154,16 +155,15 @@ int HSPMaxHeuristic::compute_heuristic(const GlobalState &global_state, int cost
     //    cout << "Returning total_cost = " << total_cost << endl << endl;
     return total_cost;
 }
-
+  
   void HSPMaxHeuristic::notify_state_transition(
     const GlobalState &parent_state, OperatorID op_id,
     const GlobalState &state) {
     (void) parent_state;
     (void) op_id;
+    (void) state;
     if (cache_evaluator_values && use_cost_bound) {
-        /* TODO:  It may be more efficient to check that the reached landmark
-           set has actually changed and only then mark the h value as dirty. */
-        heuristic_cache[state].dirty = true;
+      heuristic_cache[state].dirty = true;
     }
   }
 

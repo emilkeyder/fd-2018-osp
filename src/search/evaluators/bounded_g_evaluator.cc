@@ -10,7 +10,7 @@ using namespace std;
 namespace bounded_g_evaluator {
 EvaluationResult BoundedGEvaluator::compute_result(EvaluationContext &eval_context) {
     EvaluationResult result;
-    result.set_evaluator_value(-1 * eval_context.get_bounded_g_value());
+    result.set_evaluator_value(eval_context.get_bounded_g_value());
     return result;
 }
 
