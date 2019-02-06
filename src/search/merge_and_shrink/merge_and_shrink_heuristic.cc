@@ -54,6 +54,8 @@ MergeAndShrinkHeuristic::MergeAndShrinkHeuristic(const Options &opts)
     assert(max_states >= max_states_before_merge);
     assert(shrink_threshold_before_merge <= max_states_before_merge);
 
+    task_properties::dump_task(task_proxy);
+
     if (opts.contains("label_reduction")) {
         label_reduction = opts.get<shared_ptr<LabelReduction>>("label_reduction");
         label_reduction->initialize(task_proxy);
@@ -179,6 +181,8 @@ void MergeAndShrinkHeuristic::finalize_factor(
     }
     assert(mas_distances->are_goal_distances_computed());
     */
+    cout << "Final transition system:" << endl;
+    mas_transition_system->dump_labels_and_transitions();
     cout << "Computing initial distances according to the bounded cost" << endl;   
     mas_distances->compute_initial_distances_bounded_cost(task_proxy.get_cost_bound());
     cout << "Building final backward graph" << endl;   
@@ -254,7 +258,9 @@ int MergeAndShrinkHeuristic::main_loop(
                 print_time(timer, "after label reduction");
             }
         }
-
+//        cout << "Transition systems before shrinking" << endl;
+//        fts.dump(merge_index1);
+//        fts.dump(merge_index2);
         // Shrinking
         bool shrunk = shrink_before_merge_step(
             fts,
@@ -269,6 +275,10 @@ int MergeAndShrinkHeuristic::main_loop(
             print_time(timer, "after shrinking");
         }
 
+//        cout << "Transition systems after shrinking" << endl;
+//        fts.dump(merge_index1);
+//        fts.dump(merge_index2);
+
         // Label reduction (before merging)
         if (label_reduction && label_reduction->reduce_before_merging()) {
             bool reduced = label_reduction->reduce(merge_indices, fts, verbosity);
@@ -276,6 +286,10 @@ int MergeAndShrinkHeuristic::main_loop(
                 print_time(timer, "after label reduction");
             }
         }
+
+//        cout << "Transition systems after label reduction" << endl;
+//        fts.dump(merge_index1);
+//        fts.dump(merge_index2);
 
         // Merging
         int merged_index = fts.merge(merge_index1, merge_index2, verbosity);
@@ -290,6 +304,9 @@ int MergeAndShrinkHeuristic::main_loop(
             }
             print_time(timer, "after merging");
         }
+
+//        cout << "Transition system after merging" << endl;
+//        fts.dump(merged_index);
 
         // Pruning
         if (prune_unreachable_states || prune_irrelevant_states) {
@@ -400,6 +417,7 @@ void MergeAndShrinkHeuristic::build(const utils::Timer &timer) {
       factor. In both cases, we use this factor as the final abstraction.
     */
     finalize_factor(fts, final_index);
+
 }
 
 int MergeAndShrinkHeuristic::compute_heuristic(const GlobalState &global_state) {
@@ -418,10 +436,12 @@ int MergeAndShrinkHeuristic::compute_heuristic_w_bound(const GlobalState &global
 
     // Recomputing goal distances from the current state, using cost bound for the secondary cost function
     mas_distances->recompute_goal_distances(abstract_state, cost_bound);
-    //mas_transition_system->dump_dot_graph();
+    mas_transition_system->dump_dot_graph();
     //cout << "Abstract state: " << abstract_state << endl;
     int cost = mas_distances->get_goal_distance(abstract_state);
+    cout << "Abstract state: " << abstract_state << " with value " << cost << endl;
     if (cost == PRUNED_STATE || cost == INF) {
+        cout << "DEADEND: Abstract state: " << abstract_state << " with value " << cost << endl;
         // If state is unreachable or irrelevant, we encountered a dead end.
         return DEAD_END;
     }
