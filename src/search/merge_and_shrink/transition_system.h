@@ -204,6 +204,7 @@ public:
     bool is_solvable(const Distances &distances) const;
     void dump_dot_graph() const;
     void dump_labels_and_transitions() const;
+    void dump_non_zero_labels_and_transitions() const;
     void statistics() const;
 
     int get_size() const {

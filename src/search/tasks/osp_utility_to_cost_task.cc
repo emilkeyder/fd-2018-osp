@@ -14,11 +14,11 @@ using namespace std;
 
 namespace extra_tasks {
 
-  OSPUtilityToCostTask::OSPUtilityToCostTask(const shared_ptr<AbstractTask> &parent)
+OSPUtilityToCostTask::OSPUtilityToCostTask(const shared_ptr<AbstractTask> &parent)
     : DelegatingTask(parent) {
     if (dynamic_cast<OSPSingleEndActionReformulationTask*>(parent.get()) == nullptr) {
-      cout << "Parent task is expected to be OSPSingleEndActionReformulationTask.";
-      exit(0);
+        cout << "Parent task is expected to be OSPSingleEndActionReformulationTask.";
+        exit(0);
     }
 
     int sg_index = 0;
@@ -29,41 +29,41 @@ namespace extra_tasks {
       /*
       cout << "Considering var " << var << " with possible values: ";
       for (int value = 0; value < parent->get_variable_domain_size(var); ++value) {
-	const auto it = var_entry.second.find(value);
-	const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
+        const auto it = var_entry.second.find(value);
+       	const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
 
-	cout << parent->get_fact_name({var, value}) << " (utility: " << var_value_utility << ") ";
+      	cout << parent->get_fact_name({var, value}) << " (utility: " << var_value_utility << ") ";
       }
       cout << endl;
       */
 
       int max_utility = -1;
       for (const auto& util_entry : var_entry.second) {
-	if (util_entry.second > max_utility) {
-	  max_utility = util_entry.second;
-	}
+	      if (util_entry.second > max_utility) {
+	        max_utility = util_entry.second;
+	      }
       }
       assert(max_utility > 0);
 
       for (int value = 0; value < parent->get_variable_domain_size(var); ++value) {
-	const auto it = var_entry.second.find(value);
-	const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
+      	const auto it = var_entry.second.find(value);
+	      const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
 
-	sg_operators.emplace_back();
+      	sg_operators.emplace_back();
 
-	sg_operators.back().preconditions.push_back(FactPair(var, value));
-	sg_operators.back().preconditions.push_back(FactPair(get_sg_variable_index(), sg_index));
+      	sg_operators.back().preconditions.push_back(FactPair(var, value));
+      	sg_operators.back().preconditions.push_back(FactPair(get_sg_variable_index(), sg_index));
 
-	string fact_name = parent->get_fact_name(FactPair(var, value));
-	sg_operators.back().name =
-	  "account-sg-" + std::to_string(sg_index) + "-" + fact_name;
+      	string fact_name = parent->get_fact_name(FactPair(var, value));
+      	sg_operators.back().name =
+	           "account-sg-" + std::to_string(sg_index) + "-" + fact_name;
 
-	sg_operators.back().effects.push_back(FactPair(get_sg_variable_index(), sg_index + 1));
+      	sg_operators.back().effects.push_back(FactPair(get_sg_variable_index(), sg_index + 1));
 
-	sg_operators.back().cost = max_utility - var_value_utility;
-
+      	sg_operators.back().cost = max_utility - var_value_utility;
+        cout << "Added operator with cost " << sg_operators.back().cost << endl;
       }
-
+      cout << "Overall number of extra sg operators: " << sg_operators.size() << endl;
       sg_index++;
     }
     /*
@@ -71,12 +71,12 @@ namespace extra_tasks {
       cout << "Operator #" << i << ": " << get_operator_name(i, false) << endl;
       cout << "Preconditions: " << endl;
       for (int j = 0; j < get_num_operator_preconditions(i, false); ++j) {
-	cout << "\t" << get_fact_name(get_operator_precondition(i, j, false)) << endl;
+      	cout << "\t" << get_fact_name(get_operator_precondition(i, j, false)) << endl;
       }
       
       cout << "Effects: " << endl;
       for (int j = 0; j < get_num_operator_effects(i, false); ++j) {
-	cout << "\t" << get_fact_name(get_operator_effect(i, j, false)) << endl;
+	      cout << "\t" << get_fact_name(get_operator_effect(i, j, false)) << endl;
       }
       cout << endl << endl;
     }
