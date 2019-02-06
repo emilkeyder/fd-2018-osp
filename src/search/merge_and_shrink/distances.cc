@@ -210,6 +210,7 @@ void Distances::build_final_backward_graph() {
         const vector<Transition> &transitions = gat.transitions;
         int cost = label_group.get_cost();
         for (const Transition &transition : transitions) {
+            cout << "Transition " << transition.src << " -> " << transition.target << " with cost " << cost << endl;
             final_entry_backward_graph[transition.target].push_back(
                 make_pair(transition.src, cost));
         }

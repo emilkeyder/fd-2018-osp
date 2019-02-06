@@ -141,9 +141,13 @@ bool FactoredTransitionSystem::apply_abstraction(
 
     vector<int> abstraction_mapping = compute_abstraction_mapping(
         transition_systems[index]->get_size(), state_equivalence_relation);
-
+    cout << "BA" << endl;
+    transition_systems[index]->dump_non_zero_labels_and_transitions();
     transition_systems[index]->apply_abstraction(
         state_equivalence_relation, abstraction_mapping, verbosity);
+    cout << "AA" << endl;
+    transition_systems[index]->dump_non_zero_labels_and_transitions();
+
     if (compute_init_distances || compute_goal_distances) {
         distances[index]->apply_abstraction(
             state_equivalence_relation,

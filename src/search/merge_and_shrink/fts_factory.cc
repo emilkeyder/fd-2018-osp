@@ -403,7 +403,7 @@ FactoredTransitionSystem FTSFactory::create(
     }
 
     unique_ptr<Labels> labels = utils::make_unique_ptr<Labels>(create_labels());
-
+    labels->dump_labels();
     initialize_transition_system_data(*labels);
     build_transitions();
     vector<unique_ptr<TransitionSystem>> transition_systems =
