@@ -49,7 +49,8 @@ MergeAndShrinkHeuristic::MergeAndShrinkHeuristic(const Options &opts)
       prune_irrelevant_states(opts.get<bool>("prune_irrelevant_states")),
       verbosity(static_cast<Verbosity>(opts.get_enum("verbosity"))),
       starting_peak_memory(-1),
-      mas_representation(nullptr) {
+      mas_representation(nullptr), 
+      use_cost_bound(opts.get<bool>("use_cost_bound")) {
     assert(max_states_before_merge > 0);
     assert(max_states >= max_states_before_merge);
     assert(shrink_threshold_before_merge <= max_states_before_merge);
@@ -61,6 +62,7 @@ MergeAndShrinkHeuristic::MergeAndShrinkHeuristic(const Options &opts)
 
     utils::Timer timer;
     cout << "Initializing merge-and-shrink heuristic..." << endl;
+    cout << "use_cost_bound = " << (use_cost_bound ? "true" : "false") << endl;
     starting_peak_memory = utils::get_peak_memory_in_kb();
     task_properties::verify_no_axioms(task_proxy);
     dump_options();
@@ -179,11 +181,13 @@ void MergeAndShrinkHeuristic::finalize_factor(
     }
     assert(mas_distances->are_goal_distances_computed());
     */
-    cout << "Computing initial distances according to the bounded cost" << endl;   
-    mas_distances->compute_initial_distances_bounded_cost(task_proxy.get_cost_bound());
-    cout << "Building final backward graph" << endl;   
-    mas_distances->build_final_backward_graph();
+//     cout << "Computing initial distances according to the bounded cost" << endl;   
+//     mas_distances->compute_initial_distances_bounded_cost(task_proxy.get_cost_bound());
+//     cout << "Building final backward graph" << endl;   
+//     mas_distances->build_final_backward_graph();
     //mas_representation->set_distances(*mas_distances);    
+
+    //    mas_distances->set_global_cost_bound(task_proxy.get_cost_bound());
 }
 
 int MergeAndShrinkHeuristic::prune_fts(
@@ -372,11 +376,15 @@ void MergeAndShrinkHeuristic::build(const utils::Timer &timer) {
         shrink_strategy->requires_goal_distances() ||
         merge_strategy_factory->requires_goal_distances() ||
         prune_irrelevant_states;
+
+    const int cost_bound = use_cost_bound ? task_proxy.get_cost_bound() : std::numeric_limits<int>::max();
+
     FactoredTransitionSystem fts =
         create_factored_transition_system(
             task_proxy,
             compute_init_distances,
             compute_goal_distances,
+	    cost_bound,
             verbosity);
     if (verbosity >= Verbosity::NORMAL) {
         print_time(timer, "after computation of atomic transition systems");
@@ -413,18 +421,25 @@ int MergeAndShrinkHeuristic::compute_heuristic(const GlobalState &global_state) 
 }
 
 int MergeAndShrinkHeuristic::compute_heuristic_w_bound(const GlobalState &global_state, int cost_bound) {
+//   static int h_eval_count = 0;
+//   cout << "Evaluating state with cost bound " << cost_bound << "(" << h_eval_count++ << " evals done so far)" << endl;
+//   global_state.dump_pddl();
+
     State state = convert_global_state(global_state);
     int abstract_state = mas_representation->get_value(state);
 
     // Recomputing goal distances from the current state, using cost bound for the secondary cost function
-    mas_distances->recompute_goal_distances(abstract_state, cost_bound);
+    // mas_distances->recompute_goal_distances(abstract_state, cost_bound);
     //mas_transition_system->dump_dot_graph();
     //cout << "Abstract state: " << abstract_state << endl;
-    int cost = mas_distances->get_goal_distance(abstract_state);
+    cost_bound = use_cost_bound ? cost_bound : std::numeric_limits<int>::max();
+    int cost = mas_distances->get_goal_distance(abstract_state, cost_bound);
     if (cost == PRUNED_STATE || cost == INF) {
         // If state is unreachable or irrelevant, we encountered a dead end.
+      cout << "returning DEAD_END" << endl;
         return DEAD_END;
     }
+    //    cout << "returning " << cost << endl;
     return cost;
 }
 
@@ -638,6 +653,9 @@ static shared_ptr<Heuristic> _parse(OptionParser &parser) {
         "Option to specify the level of verbosity.",
         "verbose",
         verbosity_level_docs);
+
+    parser.add_option<bool>("use_cost_bound",
+			    "Use or ignore passed in secondary cost bound", "true");
 
     Options opts = parser.parse();
     if (parser.help_mode()) {

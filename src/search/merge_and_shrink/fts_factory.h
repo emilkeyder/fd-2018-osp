@@ -21,6 +21,7 @@ extern FactoredTransitionSystem create_factored_transition_system(
     const TaskProxy &task_proxy,
     bool compute_init_distances,
     bool compute_goal_distances,
+    int cost_bound,
     Verbosity verbosity);
 }
 

@@ -42,6 +42,7 @@ FactoredTransitionSystem::FactoredTransitionSystem(
     vector<unique_ptr<Distances>> &&distances,
     const bool compute_init_distances,
     const bool compute_goal_distances,
+    int cost_bound,
     Verbosity verbosity)
     : labels(move(labels)),
       transition_systems(move(transition_systems)),
@@ -49,7 +50,8 @@ FactoredTransitionSystem::FactoredTransitionSystem(
       distances(move(distances)),
       compute_init_distances(compute_init_distances),
       compute_goal_distances(compute_goal_distances),
-      num_active_entries(this->transition_systems.size()) {
+      num_active_entries(this->transition_systems.size()), 
+      cost_bound(cost_bound) {
     for (size_t index = 0; index < this->transition_systems.size(); ++index) {
         if (compute_init_distances || compute_goal_distances) {
             this->distances[index]->compute_distances(
@@ -183,7 +185,7 @@ int FactoredTransitionSystem::merge(
     mas_representations[index1] = nullptr;
     mas_representations[index2] = nullptr;
     const TransitionSystem &new_ts = *transition_systems.back();
-    distances.push_back(utils::make_unique_ptr<Distances>(new_ts));
+    distances.push_back(utils::make_unique_ptr<Distances>(new_ts, get_cost_bound()));
     int new_index = transition_systems.size() - 1;
     // Restore the invariant that distances are computed.
     if (compute_init_distances || compute_goal_distances) {
