@@ -54,6 +54,9 @@ class MergeAndShrinkHeuristic : public Heuristic {
     void report_peak_memory_delta(bool final = false) const;
     void dump_options() const;
     void warn_on_unusual_options() const;
+
+    bool use_cost_bound;
+
 protected:
     virtual int compute_heuristic(const GlobalState &global_state) override;
     virtual int compute_heuristic_w_bound(const GlobalState &state, int cost_bound) override;

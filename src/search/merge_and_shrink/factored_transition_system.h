@@ -51,6 +51,8 @@ class FactoredTransitionSystem {
     const bool compute_goal_distances;
     int num_active_entries;
 
+    int cost_bound;
+
     /*
       Assert that the factor at the given index is in a consistent state, i.e.
       that there is a transition system, a distances object, and an MSR.
@@ -73,6 +75,7 @@ public:
         std::vector<std::unique_ptr<Distances>> &&distances,
         bool compute_init_distances,
         bool compute_goal_distances,
+	int cost_bound,
         Verbosity verbosity);
     FactoredTransitionSystem(FactoredTransitionSystem &&other);
     ~FactoredTransitionSystem();
@@ -166,6 +169,8 @@ public:
     }
 
     bool is_active(int index) const;
+
+    int get_cost_bound() const { return cost_bound; }
 };
 }
 

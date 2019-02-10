@@ -20,7 +20,8 @@ namespace extra_tasks {
     }
 
     for (int var = 0; var < parent->get_num_variables(); ++var) {
-      end_operator.effects.push_back(FactPair(var, 0));
+      end_operator.effects.push_back(FactPair(var, parent->get_initial_state_values()[var]));
+      // end_operator.effects.push_back(FactPair(var, 0));
     }
 
     end_operator.effects.push_back(FactPair(get_sg_variable_index(),

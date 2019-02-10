@@ -4,6 +4,7 @@
 #include "types.h"
 
 #include <cassert>
+#include <iostream>
 #include <vector>
 
 /*
@@ -25,8 +26,7 @@ class TransitionSystem;
 class Distances {
     static const int DISTANCE_UNKNOWN = -1;
     const TransitionSystem &transition_system;
-    std::vector<int> init_distances;
-    std::vector<int> goal_distances;
+
     bool init_distances_computed;
     bool goal_distances_computed;
 
@@ -34,8 +34,6 @@ class Distances {
     int get_num_states() const;
     bool is_unit_cost() const;
 
-    void compute_init_distances_unit_cost();
-    void compute_goal_distances_unit_cost();
     void compute_init_distances_general_cost();
     void compute_goal_distances_general_cost();
 
@@ -43,10 +41,17 @@ class Distances {
 
     std::vector<std::vector<std::pair<int, int>>> final_entry_backward_graph;
     std::vector<std::vector<int>> init_distances_bounded_cost;
+
+
+    mutable std::vector<std::vector<std::pair<int,int>>> per_bound_goal_distances;
+    mutable std::vector<std::vector<std::pair<int,int>>> per_bound_init_distances;
+
+    std::vector<std::vector<std::pair<int, std::pair<int,int>>>> reverse_transition_graph;
+    int global_cost_bound = std::numeric_limits<int>::max();
     
 
 public:
-    explicit Distances(const TransitionSystem &transition_system);
+    explicit Distances(const TransitionSystem &transition_system, int global_cost_bound);
     ~Distances() = default;
 
     bool are_init_distances_computed() const {
@@ -57,7 +62,6 @@ public:
         return goal_distances_computed;
     }
 
-    void build_final_backward_graph();
     /* Currently, computing from goal states for all states */
     void recompute_goal_distances(int from_state, int cost_bound);
     void compute_initial_distances_bounded_cost(int cost_bound);
@@ -82,15 +86,8 @@ public:
         bool compute_goal_distances,
         Verbosity verbosity);
 
-    int get_init_distance(int state) const {
-        assert(are_init_distances_computed());
-        return init_distances[state];
-    }
-
-    int get_goal_distance(int state) const {
-        assert(are_goal_distances_computed());
-        return goal_distances[state];
-    }
+    int get_init_distance(int state, int cost_bound = std::numeric_limits<int>::max()) const;
+    int get_goal_distance(int state, int cost_bound = std::numeric_limits<int>::max()) const;
 
     void dump() const;
     void statistics() const;
