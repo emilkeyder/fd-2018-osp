@@ -483,12 +483,12 @@ void TransitionSystem::dump_dot_graph() const {
         for (const Transition &transition : transitions) {
             int src = transition.src;
             int target = transition.target;
-            cout << "    node" << src << " -> node" << target << " [label = ";
+            cout << "    node" << src << " -> node" << target << " [label = \"";
             for (LabelConstIter label_it = label_group.begin();
                  label_it != label_group.end(); ++label_it) {
                 if (label_it != label_group.begin())
                     cout << "_";
-                cout << "x" << *label_it << "("<< label_group.get_cost() <<","<< label_group.get_secondary_cost()<<")";
+                cout << "x" << *label_it << "("<< label_group.get_cost() <<","<< label_group.get_secondary_cost()<<")\"";
             }
             cout << "];" << endl;
         }
@@ -520,6 +520,38 @@ void TransitionSystem::dump_labels_and_transitions() const {
         }
         cout << endl;
         cout << "cost: " << label_group.get_cost() << endl;
+        cout << "bounded cost: " << label_group.get_secondary_cost() << endl;
+    }
+}
+
+void TransitionSystem::dump_non_zero_labels_and_transitions() const {
+    cout << "DUMPING NONZERO labels" << endl;
+    cout << tag() << "transitions" << endl;
+    for (const GroupAndTransitions &gat : *this) {
+        const LabelGroup &label_group = gat.label_group;
+        if (label_group.get_cost() ==0)
+            continue;
+//        cout << "group ID: " << ts_it.get_id() << endl;
+        cout << "labels: ";
+        for (LabelConstIter label_it = label_group.begin();
+             label_it != label_group.end(); ++label_it) {
+            if (label_it != label_group.begin())
+                cout << ",";
+            cout << *label_it;
+        }
+        cout << endl;
+        cout << "transitions: ";
+        const vector<Transition> &transitions = gat.transitions;
+        for (size_t i = 0; i < transitions.size(); ++i) {
+            int src = transitions[i].src;
+            int target = transitions[i].target;
+            if (i != 0)
+                cout << ",";
+            cout << src << " -> " << target;
+        }
+        cout << endl;
+        cout << "cost: " << label_group.get_cost() << endl;
+        cout << "bounded cost: " << label_group.get_secondary_cost() << endl;
     }
 }
 
