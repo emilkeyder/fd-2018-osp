@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
+#include <limits>
 
 /*
   TODO: Possible interface improvements for this class:
