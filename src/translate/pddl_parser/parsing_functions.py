@@ -496,12 +496,18 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
     yield bound[1]
 
     use_metric = False
+
     for entry in iterator:
-        if entry[0] == ":metric":
-            if entry[1]=="maximize" and entry[2][0] == "total-utility":
-                use_metric = True
-            else:
-                assert False, "Unknown metric."
+        if entry[0] == ":use-cost-metric":
+            use_metric = True
+
+#     for entry in iterator:
+#         if entry[0] == ":metric":
+#             if entry[1]=="maximize" and entry[2][0] == "total-utility":
+#                 use_metric = True
+#             else:
+#                 assert False, "Unknown metric."
+
     yield use_metric
 
     for entry in iterator:

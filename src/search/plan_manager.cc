@@ -79,7 +79,7 @@ void PlanManager::save_plan(
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
       if (!is_soft_goal_action(operators[op_id])) {
-        cout << operators[op_id].get_name() << " (" << operators[op_id].get_cost() << ")" << endl;
+        cout << operators[op_id].get_name() << " (" << operators[op_id].get_bounded_cost() << ")" << endl;
         outfile << "(" << operators[op_id].get_name() << ")" << endl;
 	gs = plan_states_registry.get_successor_state(gs, operators[op_id]);
       }
