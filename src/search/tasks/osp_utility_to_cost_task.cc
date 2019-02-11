@@ -61,9 +61,8 @@ OSPUtilityToCostTask::OSPUtilityToCostTask(const shared_ptr<AbstractTask> &paren
       	sg_operators.back().effects.push_back(FactPair(get_sg_variable_index(), sg_index + 1));
 
       	sg_operators.back().cost = max_utility - var_value_utility;
-        cout << "Added operator with cost " << sg_operators.back().cost << endl;
       }
-      cout << "Overall number of extra sg operators: " << sg_operators.size() << endl;
+      cout << "Total extra SG operators: " << sg_operators.size() << endl;
       sg_index++;
     }
     /*
