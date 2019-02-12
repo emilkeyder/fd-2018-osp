@@ -90,6 +90,10 @@ public:
     int get_init_distance(int state, int cost_bound = std::numeric_limits<int>::max()) const;
     int get_goal_distance(int state, int cost_bound = std::numeric_limits<int>::max()) const;
 
+    const std::vector<std::pair<int,int>>& get_per_bound_distances(int state) const {
+      return per_bound_goal_distances[state];
+    }
+
     void dump() const;
     void statistics() const;
 };

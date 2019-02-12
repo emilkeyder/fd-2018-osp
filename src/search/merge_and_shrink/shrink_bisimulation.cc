@@ -9,6 +9,7 @@
 #include "../plugin.h"
 
 #include "../utils/collections.h"
+#include "../utils/hash.h"
 #include "../utils/markup.h"
 #include "../utils/system.h"
 
@@ -112,28 +113,26 @@ int ShrinkBisimulation::initialize_groups(
        unsolvable.
     */
 
-    typedef unordered_map<int, int> GroupMap;
-    GroupMap h_to_group;
-    int num_groups = 1; // Group 0 is for goal states.
-    for (int state = 0; state < ts.get_size(); ++state) {
-        int h = distances.get_goal_distance(state);
-        if (h == INF) {
-            h = IRRELEVANT;
-        }
-        if (ts.is_goal_state(state)) {
-            assert(h == 0);
-            state_to_group[state] = 0;
-        } else {
-            pair<GroupMap::iterator, bool> result = h_to_group.insert(
-                make_pair(h, num_groups));
-            state_to_group[state] = result.first->second;
-            if (result.second) {
-                // We inserted a new element => a new group was started.
-                ++num_groups;
-            }
-        }
+  typedef utils::HashMap<std::vector<std::pair<int,int> >, int > GroupMap;
+  GroupMap h_to_group;
+  int num_groups = 1; // Group 0 is for goal states.
+  for (int state = 0; state < ts.get_size(); ++state) {
+    if (ts.is_goal_state(state)) {
+      state_to_group[state] = 0;
+      continue;
     }
-    return num_groups;
+    
+    const std::vector<std::pair<int,int> >& per_bound_dists = distances.get_per_bound_distances(state);
+    if (per_bound_dists.empty()) continue;
+    
+    pair<GroupMap::iterator, bool> result = h_to_group.insert(make_pair(per_bound_dists, num_groups));
+    state_to_group[state] = result.first->second;
+    if (result.second) {
+      // We inserted a new element => a new group was started.
+      ++num_groups;
+    }
+  }
+  return num_groups;
 }
 
 void ShrinkBisimulation::compute_signatures(
