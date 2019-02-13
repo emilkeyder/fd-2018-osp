@@ -130,7 +130,7 @@ void RelaxationHeuristic::simplify() {
             int new_cost = unary_operators[i].base_cost;
 	    int new_bounded_cost = unary_operators[i].base_bounded_cost;
 
-            if (new_cost < old_cost && new_bounded_cost < old_bounded_cost) {
+            if (new_cost <= old_cost && new_bounded_cost <= old_bounded_cost) {
                 iter->second = i;
 	    }
             assert(unary_operators[unary_operator_index[key]].base_cost ==
