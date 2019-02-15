@@ -41,7 +41,7 @@ TransitionGraph get_transition_graph(const TransitionSystem& ts,
     const LabelGroup &label_group = gat.label_group;
     const vector<Transition> &transitions = gat.transitions;
     for (const Transition &transition : transitions) {
-      //      if (transition.src == transition.target) continue;
+      if (transition.src == transition.target) continue;
 
       int source = reverse ? transition.target : transition.src;
       int target = reverse ? transition.src : transition.target;
@@ -71,7 +71,7 @@ void compute_per_bound_distances_internal(const TransitionGraph& tg,
   std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>> queue;
   
   for (int state : starting_states) {
-    cout << "Init of state " << state << " with costs (0,0)" << endl;
+    //    cout << "Init of state " << state << " with costs (0,0)" << endl;
     queue.push({state, {0, 0}});
   }
     
@@ -81,11 +81,11 @@ void compute_per_bound_distances_internal(const TransitionGraph& tg,
     
     std::vector<std::pair<int, int>>& state_dists = distances[pq_entry.state];
 
-    cout << "Popped state " << pq_entry.state << " with current cost vector ";
-    for (const auto& entry : state_dists) {
-      cout << "(" << entry.first << ", " << entry.second << "), ";
-    }
-    cout << endl;
+//     cout << "Popped state " << pq_entry.state << " with current cost vector ";
+//     for (const auto& entry : state_dists) {
+//       cout << "(" << entry.first << ", " << entry.second << "), ";
+//     }
+//     cout << endl;
     
     if (state_dists.empty() || 
 	// previously discovered at a lower bounded cost with higher primary cost. 
@@ -95,7 +95,7 @@ void compute_per_bound_distances_internal(const TransitionGraph& tg,
 	
       for (const std::pair<int, std::pair<int, int>>& adj_state : tg[pq_entry.state]) {
 	// Ignore self loops
-	// if (adj_state.first == pq_entry.state) continue;
+	if (adj_state.first == pq_entry.state) continue;
 	if (pq_entry.costs.first + adj_state.second.first > cost_bound) continue;
 	
 	queue.push({adj_state.first, 
@@ -103,35 +103,20 @@ void compute_per_bound_distances_internal(const TransitionGraph& tg,
 		  pq_entry.costs.second + adj_state.second.second}});
       }
     }
-
-    cout << "After update state " << pq_entry.state << " has cost vector ";
-    for (const auto& entry : state_dists) {
-      cout << "(" << entry.first << ", " << entry.second << "), ";
-    }
-    cout << endl;
-
   }
 
-  for (size_t i = 0; i < tg.size(); ++i) {
-    cout << "Final entry for state " << i << ": ";
-    for (const auto& entry : distances[i]) {
-      cout << "(" << entry.first << ", " << entry.second << "), ";
-    }
-    cout << endl;
-  }
+//   for (size_t i = 0; i < tg.size(); ++i) {
+//     cout << "Final entry for state " << i << ": ";
+//     for (const auto& entry : distances[i]) {
+//       cout << "(" << entry.first << ", " << entry.second << "), ";
+//     }
+//     cout << endl;
+//   }
 
 }		       
 
 void Distances::compute_goal_distances_general_cost() {
   TransitionGraph tg = get_transition_graph(transition_system, true);
-
-  cout << "Transition graph in compute_goal_distances_general_cost()" << endl;
-  for (size_t i = 0; i < tg.size(); ++i) {
-    for (size_t j = 0; j < tg[i].size(); ++j) {
-      cout << i << " --> " << tg[i][j].first 
-	   << " (" << tg[i][j].second.first << ", " << tg[i][j].second.second << ")" << endl;
-    }
-  }
 
   std::vector<int> goal_states;
   for (int state = 0; state < get_num_states(); ++state) {
@@ -139,24 +124,14 @@ void Distances::compute_goal_distances_general_cost() {
       goal_states.push_back(state);
     }
   }
-  cout << "compute_per_bound_distances_internal() for goal distances" << endl;
   compute_per_bound_distances_internal(tg, goal_states, per_bound_goal_distances, global_cost_bound);
 }
 
 void Distances::compute_init_distances_general_cost() {
   TransitionGraph tg = get_transition_graph(transition_system, false);
 
-  cout << "Transition graph in compute_init_distances_general_cost()" << endl;
-  for (size_t i = 0; i < tg.size(); ++i) {
-    for (size_t j = 0; j < tg[i].size(); ++j) {
-      cout << i << " --> " << tg[i][j].first 
-	   << " (" << tg[i][j].second.first << ", " << tg[i][j].second.second << ")" << endl;
-    }
-  }
-
   std::vector<int> init_states = {transition_system.get_init_state()};
 
-  cout << "compute_per_bound_distances_internal() for init distances" << endl;
   compute_per_bound_distances_internal(tg, init_states, per_bound_init_distances, global_cost_bound);
 }
 
@@ -174,15 +149,8 @@ int get_distance(const std::vector<std::pair<int,int>>& state_bounds_and_dists,
 }
 
 int Distances::get_goal_distance(int state, int cost_bound) const {
-  cout << "get_goal_distance()" << endl;
   const std::vector<std::pair<int,int>>& state_bounds_and_goal_dists = 
     per_bound_goal_distances[state];
-
-  cout << "Bounds and eval dists for state " << state << " : " << flush;
-  for (const auto& entry : state_bounds_and_goal_dists) {
-    cout << "(" << entry.first << ", " << entry.second << "), " << flush;
-  }
-  cout << endl;
 
   return get_distance(state_bounds_and_goal_dists, cost_bound);
 }
