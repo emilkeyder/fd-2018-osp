@@ -65,7 +65,7 @@ void LabelEquivalenceRelation::add_label_to_group(int group_id,
         grouped_labels[group_id].set_cost(label_cost);
 
     int label_secondary_cost = labels.get_label_secondary_cost(label_no);
-    if (label_secondary_cost > grouped_labels[group_id].get_secondary_cost()) {
+    if (label_secondary_cost < grouped_labels[group_id].get_secondary_cost()) {
         //cout << "UpdatingGroup secondary cost: " << grouped_labels[group_id].get_secondary_cost() << " -> " << label_secondary_cost << endl;
         grouped_labels[group_id].set_secondary_cost(label_secondary_cost);
     }
@@ -103,14 +103,14 @@ void LabelEquivalenceRelation::apply_label_mapping(
             LabelGroup &label_group = grouped_labels[group_id];
             // Setting cost to infinity for empty groups does not hurt.
             label_group.set_cost(INF);
-            label_group.set_secondary_cost(0);
+            label_group.set_secondary_cost(INF);
             for (int label_no : label_group) {
                 int cost = labels.get_label_cost(label_no);
                 if (cost < label_group.get_cost()) {
                     label_group.set_cost(cost);
                 }
                 int secondary_cost = labels.get_label_secondary_cost(label_no);
-                if (secondary_cost > label_group.get_secondary_cost()) {
+                if (secondary_cost < label_group.get_secondary_cost()) {
                     //cout << "Updating secondary cost: " << label_group.get_secondary_cost() << " -> " << secondary_cost << endl;
                     label_group.set_secondary_cost(secondary_cost);
                 }
