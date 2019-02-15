@@ -39,8 +39,15 @@ using SuccessorSignature = vector<pair<int, int>>;
   use INF - 1 as the distance value for all irrelevant states. This guarantees
   that also irrelevant states are always ordered before the sentinel.
 */
-const int SENTINEL = numeric_limits<int>::max();
-const int IRRELEVANT = SENTINEL - 1;
+
+using HType = std::vector<std::pair<int,int> >;
+
+const HType SENTINEL = {{numeric_limits<int>::max(), numeric_limits<int>::max()}};
+const HType IRRELEVANT = {{numeric_limits<int>::max() - 1, numeric_limits<int>::max() - 1}};
+
+const HType GOAL = {{-1, -1}};
+const HType FIRST_ENTRY_VALUE = {{-2, -2}};
+const HType HTYPE_INF = {};
 
 /*
   The following class encodes all we need to know about a state for
@@ -50,36 +57,55 @@ const int IRRELEVANT = SENTINEL - 1;
 */
 
 struct Signature {
-    int h_and_goal; // -1 for goal states; h value for non-goal states
+    // int h_and_goal; // -1 for goal states; h value for non-goal states
+  HType h_and_goal;
     int group;
     SuccessorSignature succ_signature;
     int state;
 
-    Signature(int h, bool is_goal, int group_,
-              const SuccessorSignature &succ_signature_,
-              int state_)
-        : group(group_), succ_signature(succ_signature_), state(state_) {
-        if (is_goal) {
-            assert(h == 0);
-            h_and_goal = -1;
-        } else {
-            h_and_goal = h;
-        }
+  Signature(const HType& h, bool is_goal, int group_,
+	    const SuccessorSignature &succ_signature_,
+	    int state_)
+    : group(group_), succ_signature(succ_signature_), state(state_) {
+    if (is_goal) {
+      assert(h == ({{0, 0}}));
+      h_and_goal = GOAL;
+    } else {
+      h_and_goal = h;
     }
+  }
 
     bool operator<(const Signature &other) const {
-        if (h_and_goal != other.h_and_goal)
-            return h_and_goal < other.h_and_goal;
-        if (group != other.group)
-            return group < other.group;
-        if (succ_signature != other.succ_signature)
-            return succ_signature < other.succ_signature;
-        return state < other.state;
+      if (h_and_goal != other.h_and_goal) {
+	// return h_and_goal < other.h_and_goal;
+	auto this_rit = h_and_goal.crbegin();
+	auto other_rit = other.h_and_goal.crbegin();
+	for (; this_rit < h_and_goal.crend() && other_rit < other.h_and_goal.crend(); ++this_rit, ++other_rit) {
+	  if (this_rit->second != other_rit->second) return this_rit->second < other_rit->second;
+	  if (this_rit->first != other_rit->first) return this_rit->first < other_rit->first;
+	}
+	// One of the states has extra entries - that one should be less. 
+	return this_rit != h_and_goal.crend();
+      }
+      if (group != other.group)
+	return group < other.group;
+      if (succ_signature != other.succ_signature)
+	return succ_signature < other.succ_signature;
+      return state < other.state;
     }
 
     void dump() const {
-        cout << "Signature(h_and_goal = " << h_and_goal
-             << ", group = " << group
+      cout << "Signature(h_and_goal = [";
+      for (size_t i = 0; i < h_and_goal.size(); ++i) {
+	if (i)
+	  cout << ", ";
+	cout << "(" << h_and_goal[i].first
+	     << "," << h_and_goal[i].second
+	     << ")";
+      }
+      cout << "]";
+
+      cout << ", group = " << group
              << ", state = " << state
              << ", succ_sig = [";
         for (size_t i = 0; i < succ_signature.size(); ++i) {
@@ -143,10 +169,10 @@ void ShrinkBisimulation::compute_signatures(
     assert(signatures.empty());
 
     // Step 1: Compute bare state signatures (without transition information).
-    signatures.push_back(Signature(-2, false, -1, SuccessorSignature(), -1));
+    signatures.push_back(Signature(FIRST_ENTRY_VALUE, false, -1, SuccessorSignature(), -1));
     for (int state = 0; state < ts.get_size(); ++state) {
-        int h = distances.get_goal_distance(state);
-        if (h == INF) {
+      HType h = distances.get_per_bound_distances(state);
+        if (h == HTYPE_INF) {
             h = IRRELEVANT;
         }
         Signature signature(h, ts.is_goal_state(state),
@@ -183,15 +209,18 @@ void ShrinkBisimulation::compute_signatures(
             label_reduction=exact(before_shrinking=true,before_merging=false)))
     */
     for (const GroupAndTransitions &gat : ts) {
-        const LabelGroup &label_group = gat.label_group;
+      // Only needed for greedy computation
+      // const LabelGroup &label_group = gat.label_group;
         const vector<Transition> &transitions = gat.transitions;
         for (const Transition &transition : transitions) {
             assert(signatures[transition.src + 1].state == transition.src);
+	    // We don't use greedy bisim for oversubscription.
+	    /*
             bool skip_transition = false;
             if (greedy) {
                 int src_h = distances.get_goal_distance(transition.src);
                 int target_h = distances.get_goal_distance(transition.target);
-                if (src_h == INF || target_h == INF) {
+                if (src_h == HTYPE_INF || target_h == HTYPE_INF) {
                     // We skip transitions connected to an irrelevant state.
                     skip_transition = true;
                 } else {
@@ -199,13 +228,12 @@ void ShrinkBisimulation::compute_signatures(
                     assert(target_h + cost >= src_h);
                     skip_transition = (target_h + cost != src_h);
                 }
-            }
-            if (!skip_transition) {
-                int target_group = state_to_group[transition.target];
-                assert(target_group != -1 && target_group != SENTINEL);
-                signatures[transition.src + 1].succ_signature.push_back(
-                    make_pair(label_group_counter, target_group));
-            }
+		}*/
+            // if (!skip_transition) {
+	    int target_group = state_to_group[transition.target];
+	    assert(target_group != -1 && target_group != SENTINEL);
+	    signatures[transition.src + 1].succ_signature.push_back(make_pair(label_group_counter, target_group));
+	    // }
         }
         ++label_group_counter;
     }
@@ -262,12 +290,12 @@ StateEquivalenceRelation ShrinkBisimulation::compute_equivalence_relation(
 
         // Verify size of signatures and presence of sentinels.
         assert(static_cast<int>(signatures.size()) == num_states + 2);
-        assert(signatures[0].h_and_goal == -2);
+        assert(signatures[0].h_and_goal == FIRST_ENTRY_VALUE);
         assert(signatures[num_states + 1].h_and_goal == SENTINEL);
 
         int sig_start = 1; // Skip over initial sentinel.
         while (true) {
-            int h_and_goal = signatures[sig_start].h_and_goal;
+            HType h_and_goal = signatures[sig_start].h_and_goal;
             if (h_and_goal == SENTINEL) {
                 // We have hit the end sentinel.
                 assert(sig_start + 1 == static_cast<int>(signatures.size()));
