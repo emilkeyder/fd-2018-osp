@@ -22,7 +22,7 @@ class LabelGroup {
     int cost;
     int secondary_cost;
 public:
-    LabelGroup() : cost(INF), secondary_cost(0) {
+    LabelGroup() : cost(INF), secondary_cost(INF) {
     }
 
     void set_cost(int cost_) {

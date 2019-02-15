@@ -16,6 +16,7 @@
 #include "../utils/rng.h"
 #include "../utils/rng_options.h"
 #include "../utils/system.h"
+#include "../utils/hash.h"
 
 #include "../task_utils/task_properties.h"
 
@@ -33,7 +34,9 @@ LabelReduction::LabelReduction(const Options &options)
       lr_before_merging(options.get<bool>("before_merging")),
       lr_method(LabelReductionMethod(options.get_enum("method"))),
       lr_system_order(LabelReductionSystemOrder(options.get_enum("system_order"))),
-      rng(utils::parse_rng_from_options(options)), maximal_secondary_cost(-1) {
+      rng(utils::parse_rng_from_options(options))
+//      , maximal_secondary_cost(-1) 
+      {
 }
 
 bool LabelReduction::initialized() const {
@@ -58,8 +61,7 @@ void LabelReduction::initialize(const TaskProxy &task_proxy) {
         for (size_t i = 0; i < max_transition_system_count; ++i)
             transition_system_order.push_back(max_transition_system_count - 1 - i);
     }
-
-    maximal_secondary_cost = task_properties::get_max_bounded_operator_cost(task_proxy);
+//    maximal_secondary_cost = task_properties::get_max_bounded_operator_cost(task_proxy);
 }
 
 void LabelReduction::compute_label_mapping(
@@ -67,14 +69,15 @@ void LabelReduction::compute_label_mapping(
     const FactoredTransitionSystem &fts,
     vector<pair<int, vector<int>>> &label_mapping,
     Verbosity verbosity) const {
-    const Labels &labels = fts.get_labels(); 
+    const Labels &labels = fts.get_labels();
     int next_new_label_no = labels.get_size();
     int num_labels = 0;
     int num_labels_after_reduction = 0;
     for (auto group_it = relation->begin();
          group_it != relation->end(); ++group_it) {
         const equivalence_relation::Block &block = *group_it;
-        unordered_map<int, vector<int>> equivalent_label_nos;
+//        unordered_map<int, vector<int>> equivalent_label_nos;
+        unordered_map<pair<int,int>, vector<int>> equivalent_label_nos;
         for (auto label_it = block.begin();
              label_it != block.end(); ++label_it) {
             assert(*label_it < next_new_label_no);
@@ -84,11 +87,12 @@ void LabelReduction::compute_label_mapping(
                 int cost = labels.get_label_cost(label_no);
                 int secondary_cost = labels.get_label_secondary_cost(label_no);
                 // Since either cost or secondary_cost are 0 for all operators, this hash is exact.
-                int unified_cost = secondary_cost;
-                if (cost > 0) {
-                    unified_cost = cost + maximal_secondary_cost + 1;
-                }
-                equivalent_label_nos[unified_cost].push_back(label_no);
+//                int unified_cost = secondary_cost;
+//                if (cost > 0) {
+//                    unified_cost = cost + maximal_secondary_cost + 1;
+//                }
+//                equivalent_label_nos[unified_cost].push_back(label_no);
+                equivalent_label_nos[make_pair(cost, secondary_cost)].push_back(label_no);
                 ++num_labels;
             }
         }

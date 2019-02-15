@@ -35,7 +35,7 @@ void Labels::reduce_labels(const vector<int> &old_label_nos) {
             new_label_cost = cost;
         }
         int secondary_cost = get_label_secondary_cost(old_label_no);
-        if (secondary_cost > new_label_secondary_cost) {
+        if (secondary_cost < new_label_secondary_cost) {
             new_label_secondary_cost = secondary_cost;
         }
 

@@ -73,7 +73,7 @@ class LabelReduction {
     *compute_combinable_equivalence_relation(
         int ts_index,
         const FactoredTransitionSystem &fts) const;
-    int maximal_secondary_cost;
+//    int maximal_secondary_cost;
 public:
     explicit LabelReduction(const options::Options &options);
     void initialize(const TaskProxy &task_proxy);
