@@ -623,7 +623,7 @@ def pddl_to_sas(task):
         with timers.timing("Reordering and filtering variables", block=True):
             variable_order.find_and_apply_variable_order(
                 sas_task, options.reorder_variables,
-                filter_unimportant_vars)
+                options.filter_unimportant_vars)
 
     return sas_task
 
