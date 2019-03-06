@@ -65,7 +65,7 @@ public:
 					 const GlobalState &state) override{
       (void) parent_state;
       (void) op_id;
-      if (cache_evaluator_values) {
+      if (cache_evaluator_values && use_cost_bound) {
         /* TODO:  It may be more efficient to check that the reached landmark
            set has actually changed and only then mark the h value as dirty. */
         heuristic_cache[state].dirty = true;
