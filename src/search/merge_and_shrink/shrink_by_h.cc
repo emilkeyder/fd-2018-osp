@@ -8,6 +8,7 @@
 #include "../plugin.h"
 
 #include "../utils/collections.h"
+#include "../utils/hash.h"
 #include "../utils/markup.h"
 
 #include <algorithm>
@@ -22,6 +23,7 @@ using namespace std;
 namespace merge_and_shrink {
 ShrinkByH::ShrinkByH(const Options &) {
 }
+
 
 StateEquivalenceRelation ShrinkByH::compute_equivalence_relation(
         const TransitionSystem &ts,
@@ -40,27 +42,26 @@ StateEquivalenceRelation ShrinkByH::compute_equivalence_relation(
     // If max_h == 0, then we don't shrink
     bool has_goal_variables = (max_h > 0);
     if (has_goal_variables) {
-        vector<vector<int>> buckets;
-        buckets.resize(max_h+2); // The last bucket is the INF bucket        
+      typedef utils::HashMap<std::vector<std::pair<int,int> >, std::vector<int> > GroupMap;
+      GroupMap buckets;
+
         int bucket_count = 0;
         for (int state = 0; state < num_states; ++state) {
-            int h = distances.get_goal_distance(state);
-            if (h == INF) 
-                h = max_h + 1;
-            vector<int> &bucket = buckets[h];
-            if (bucket.empty())
-                ++bucket_count;
-            bucket.push_back(state);
+	  const std::vector<std::pair<int,int>>& per_bound_dists = distances.get_per_bound_distances(state);
+	  vector<int> &bucket = buckets[per_bound_dists];
+
+	  if (bucket.empty()) ++bucket_count;
+	  
+	  bucket.push_back(state);
         }
         StateEquivalenceRelation equiv_relation;
         equiv_relation.reserve(bucket_count);
 
-        for (const vector<int>& bucket : buckets) {
-            if (!bucket.empty()) {
-                equiv_relation.push_back(StateEquivalenceClass());
-                StateEquivalenceClass &group = equiv_relation.back();
-                group.insert_after(group.before_begin(), bucket.begin(), bucket.end());
-            }
+	for (auto it = buckets.begin(); it != buckets.end(); ++it) {
+	  const vector<int>& bucket = it->second;
+	  equiv_relation.push_back(StateEquivalenceClass());
+	  StateEquivalenceClass &group = equiv_relation.back();
+	  group.insert_after(group.before_begin(), bucket.begin(), bucket.end());
         }
         assert(static_cast<int>(equiv_relation.size()) == bucket_count);
         return equiv_relation;
