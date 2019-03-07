@@ -660,6 +660,7 @@ fast_downward_plugin(
         merge_and_shrink/transition_system
         merge_and_shrink/types
         merge_and_shrink/utils
+        merge_and_shrink/shrink_by_h
     DEPENDS PRIORITY_QUEUES EQUIVALENCE_RELATION SCCS TASK_PROPERTIES VARIABLE_ORDER_FINDER
 )
 
