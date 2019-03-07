@@ -34,7 +34,7 @@ public:
     virtual StateEquivalenceRelation compute_equivalence_relation(
         const TransitionSystem &ts,
         const Distances &distances,
-        int target_size) const;
+        int target_size) const override;
         
     virtual bool requires_init_distances() const override {
         return false;
