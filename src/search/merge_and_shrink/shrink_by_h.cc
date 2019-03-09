@@ -49,7 +49,7 @@ StateEquivalenceRelation ShrinkByH::compute_equivalence_relation(
 	        const std::vector<std::pair<int,int>>& per_bound_dists = distances.get_per_bound_distances(state);
 	        vector<int> &bucket = buckets[per_bound_dists];
 
-	        if (!bucket.empty()) ++bucket_count;
+	        if (bucket.empty()) ++bucket_count;
 	  
 	        bucket.push_back(state);
         }
