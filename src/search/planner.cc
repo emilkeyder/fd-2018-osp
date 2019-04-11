@@ -8,6 +8,7 @@
 #include "utils/timer.h"
 
 #include "tasks/osp_single_end_action_reformulation_task.h"
+#include "tasks/osp_single_end_action_no_added_var_task.h"
 
 #include <iostream>
 
@@ -27,11 +28,12 @@ int main(int argc, const char **argv) {
         cout << "reading input... [t=" << utils::g_timer << "]" << endl;
         tasks::read_root_task(cin);
         cout << "done reading input! [t=" << utils::g_timer << "]" << endl;
-	
-	cout << "Doing OSPSingleEndActionReformulationTask conversion... [t=" << utils::g_timer << "]" << endl;
-	tasks::g_root_task = std::make_shared<extra_tasks::OSPSingleEndActionReformulationTask>(
+
+	// TODO: allow choosing between different compilations at command line
+	cout << "Doing OSPSingleEndActionNoAddedVarTask conversion... [t=" << utils::g_timer << "]" << endl;
+	tasks::g_root_task = std::make_shared<extra_tasks::OSPSingleEndActionNoAddedVarTask>(
 	    tasks::g_root_task);
-	cout << "Done with OSPSingleEndActionReformulationTask conversion [t=" << utils::g_timer << "]" << endl;
+	cout << "Done with OSPSingleEndActionNoAddedVarTask conversion [t=" << utils::g_timer << "]" << endl;
 
 	std::vector<FactPairUtility> utilities = tasks::g_root_task->get_fact_pair_utilities();
 	std::vector<int> initial_state_values = tasks::g_root_task->get_initial_state_values();
