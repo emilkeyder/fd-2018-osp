@@ -21,7 +21,7 @@ namespace merge_and_shrink {
   do not need to merge across buckets. Therefore the complication
   might not be worth the code maintenance cost.
 */
-class ShrinkByH : public ShrinkStrategy {
+class ShrinkByH : public ShrinkBucketBased {
 
 protected:
     virtual std::string name() const override;
@@ -31,10 +31,9 @@ public:
     explicit ShrinkByH(const options::Options &opts);
     virtual ~ShrinkByH() override = default;
 
-    virtual StateEquivalenceRelation compute_equivalence_relation(
+    std::vector<Bucket> partition_into_buckets(
         const TransitionSystem &ts,
-        const Distances &distances,
-        int target_size) const override;
+        const Distances &distances) const override;
         
     virtual bool requires_init_distances() const override {
         return false;

@@ -549,7 +549,9 @@ fast_downward_plugin(
         tasks/modified_goals_task
         tasks/modified_operator_costs_task
         tasks/osp_utility_to_cost_task
+        tasks/osp_utility_to_cost_no_added_var_task
         tasks/osp_single_end_action_reformulation_task
+        tasks/osp_single_end_action_no_added_var_task
     DEPENDS TASK_PROPERTIES
     DEPENDENCY_ONLY
 )
