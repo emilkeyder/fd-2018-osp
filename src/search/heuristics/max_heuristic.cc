@@ -88,11 +88,10 @@ void HSPMaxHeuristic::relaxed_exploration(int cost_bound) {
 //  	cout << prop_names_dict[prop->id]
 //  	     << " with cost " << prop_cost << ", bounded cost " << prop_bounded_cost << endl;
 
-	if (use_cost_bound && prop_bounded_cost > cost_bound) {
-//  	  cout << "Skipping proposition " << prop_names_dict[prop->id]
-//  	       << " with bounded cost " << prop_bounded_cost << endl;
-	  continue;
-	}
+// 	if (use_cost_bound && prop_bounded_cost > cost_bound) {
+// 	  continue;
+// 	}
+
         if (prop_cost < distance || (prop_cost == distance && prop_bounded_cost < bounded_distance)) {
             continue;
 	}
@@ -102,11 +101,16 @@ void HSPMaxHeuristic::relaxed_exploration(int cost_bound) {
         const vector<UnaryOperator *> &triggered_operators =
             prop->precondition_of;
         for (UnaryOperator *unary_op : triggered_operators) {
+	    unary_op->bounded_cost = max(unary_op->bounded_cost, 
+					 unary_op->base_bounded_cost + prop_bounded_cost);
+
+	    if (use_cost_bound && unary_op->bounded_cost > cost_bound) {
+	      break;
+	    }
+
             --unary_op->unsatisfied_preconditions;
             unary_op->cost = max(unary_op->cost,
                                  unary_op->base_cost + prop_cost);
-	    unary_op->bounded_cost = max(unary_op->bounded_cost, 
-					 unary_op->base_bounded_cost + prop_bounded_cost);
 
 // 	    cout << "Unary op " << task_proxy.get_operators()[unary_op->operator_no].get_name()
 // 		 << " has " << unary_op->unsatisfied_preconditions << " preconditions remaining "
