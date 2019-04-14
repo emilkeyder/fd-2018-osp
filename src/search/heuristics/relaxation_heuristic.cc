@@ -48,6 +48,16 @@ RelaxationHeuristic::RelaxationHeuristic(const options::Options &opts)
         for (size_t j = 0; j < op->precondition.size(); ++j)
             op->precondition[j]->precondition_of.push_back(op);
     }
+
+    for (std::vector<Proposition>& var_propositions : propositions) {
+      for (Proposition& fact_prop : var_propositions) {
+	std::sort(fact_prop.precondition_of.begin(), 
+		  fact_prop.precondition_of.end(),
+		  [](const UnaryOperator* op1, const UnaryOperator* op2) {
+		    return op1->bounded_cost < op2->bounded_cost;
+		  });
+      }
+    }
 }
 
 RelaxationHeuristic::~RelaxationHeuristic() {

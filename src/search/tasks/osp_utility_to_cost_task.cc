@@ -39,27 +39,39 @@ OSPUtilityToCostTask::OSPUtilityToCostTask(const shared_ptr<AbstractTask> &paren
 
       int max_utility = -1;
       for (const auto& util_entry : var_entry.second) {
-	      if (util_entry.second > max_utility) {
-	        max_utility = util_entry.second;
-	      }
+	if (util_entry.second > max_utility) {
+	  max_utility = util_entry.second;
+	}
       }
       assert(max_utility > 0);
 
       for (int value = 0; value < parent->get_variable_domain_size(var); ++value) {
       	const auto it = var_entry.second.find(value);
-	      const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
+	const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
+
+	if (var_value_utility > 0) continue;
 
       	sg_operators.emplace_back();
+      	sg_operators.back().preconditions.push_back(FactPair(get_sg_variable_index(), sg_index));
+      	sg_operators.back().name = "account-sg-no-util";
+      	sg_operators.back().effects.push_back(FactPair(get_sg_variable_index(), sg_index + 1));
+      	sg_operators.back().cost = max_utility;
+	break;
+      }
 
+      for (int value = 0; value < parent->get_variable_domain_size(var); ++value) {
+      	const auto it = var_entry.second.find(value);
+	const int var_value_utility = it == var_entry.second.end() ? 0 : it->second;
+
+	if (var_value_utility == 0) continue;
+
+      	sg_operators.emplace_back();
       	sg_operators.back().preconditions.push_back(FactPair(var, value));
       	sg_operators.back().preconditions.push_back(FactPair(get_sg_variable_index(), sg_index));
 
-      	string fact_name = parent->get_fact_name(FactPair(var, value));
-      	sg_operators.back().name =
-	           "account-sg-" + std::to_string(sg_index) + "-" + fact_name;
-
+      	const string fact_name = parent->get_fact_name(FactPair(var, value));
+      	sg_operators.back().name = "account-sg-" + std::to_string(sg_index) + "-" + fact_name;
       	sg_operators.back().effects.push_back(FactPair(get_sg_variable_index(), sg_index + 1));
-
       	sg_operators.back().cost = max_utility - var_value_utility;
       }
       cout << "Total extra SG operators: " << sg_operators.size() << endl;
