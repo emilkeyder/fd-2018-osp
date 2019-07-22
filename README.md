@@ -44,3 +44,7 @@ or with merge and shrink (note that settings other than the ones here may not be
 ```
 --heuristic "ms=merge_and_shrink(shrink_strategy=shrink_bisimulation(greedy=false),merge_strategy=merge_sccs(order_of_sccs=topological,merge_selector=score_based_filtering(scoring_functions=[goal_relevance,dfp,total_order(atomic_before_product=false,atomic_ts_order=reverse_level,product_ts_order=new_to_old)])),label_reduction=exact(before_shrinking=true,before_merging=false),max_states=50000,threshold_before_merge=1,transform=osp_utility_to_cost(), use_cost_bound=true) --search "astar(ms)"
 ```
+
+Note that the input pddl is expected to contain `:utility` and `:bound` settings, such as those used in the suite of problems available here: 
+
+https://zenodo.org/record/2576024
