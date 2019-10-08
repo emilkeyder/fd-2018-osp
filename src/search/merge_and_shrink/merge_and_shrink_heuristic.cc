@@ -17,6 +17,7 @@
 #include "../plugin.h"
 
 #include "../task_utils/task_properties.h"
+#include "../utils/countdown_timer.h"
 #include "../utils/markup.h"
 #include "../utils/math.h"
 #include "../utils/system.h"
@@ -48,6 +49,7 @@ MergeAndShrinkHeuristic::MergeAndShrinkHeuristic(const Options &opts)
       prune_unreachable_states(opts.get<bool>("prune_unreachable_states")),
       prune_irrelevant_states(opts.get<bool>("prune_irrelevant_states")),
       verbosity(static_cast<Verbosity>(opts.get_enum("verbosity"))),
+      main_loop_max_time(opts.get<double>("main_loop_max_time")),
       starting_peak_memory(-1),
       mas_representation(nullptr), 
       use_cost_bound(opts.get<bool>("use_cost_bound")) {
@@ -165,6 +167,19 @@ void MergeAndShrinkHeuristic::warn_on_unusual_options() const {
     }
 }
 
+bool MergeAndShrinkHeuristic::ran_out_of_time(
+    const utils::CountdownTimer &timer) const {
+    if (timer.is_expired()) {
+        if (verbosity >= Verbosity::NORMAL) {
+            cout << "Ran out of time, stopping computation." << endl;
+            cout << endl;
+        }
+        return true;
+    }
+    return false;
+}
+
+
 void MergeAndShrinkHeuristic::finalize_factor(
     FactoredTransitionSystem &fts, int index) {
     tuple<unique_ptr<MergeAndShrinkRepresentation>, unique_ptr<Distances>, unique_ptr<TransitionSystem>>
@@ -221,6 +236,16 @@ int MergeAndShrinkHeuristic::prune_fts(
 
 int MergeAndShrinkHeuristic::main_loop(
     FactoredTransitionSystem &fts, const utils::Timer &timer) {
+    utils::CountdownTimer ctimer(main_loop_max_time);
+    if (verbosity >= Verbosity::NORMAL) {
+        cout << "Starting main loop ";
+        if (main_loop_max_time == numeric_limits<double>::infinity()) {
+            cout << "without a time limit." << endl;
+        } else {
+            cout << "with a time limit of "
+                 << main_loop_max_time << "s." << endl;
+        }
+    }
     int maximum_intermediate_size = 0;
     for (int i = 0; i < fts.get_size(); ++i) {
         int size = fts.get_ts(i).get_size();
@@ -238,6 +263,9 @@ int MergeAndShrinkHeuristic::main_loop(
     while (fts.get_num_active_entries() > 1) {
         // Choose next transition systems to merge
         pair<int, int> merge_indices = merge_strategy->get_next();
+        if (ran_out_of_time(ctimer)) {
+            break;
+        }
         int merge_index1 = merge_indices.first;
         int merge_index2 = merge_indices.second;
         assert(merge_index1 != merge_index2);
@@ -258,7 +286,9 @@ int MergeAndShrinkHeuristic::main_loop(
                 print_time(timer, "after label reduction");
             }
         }
-
+        if (ran_out_of_time(ctimer)) {
+            break;
+        }
         // Shrinking
         bool shrunk = shrink_before_merge_step(
             fts,
@@ -272,7 +302,9 @@ int MergeAndShrinkHeuristic::main_loop(
         if (verbosity >= Verbosity::NORMAL && shrunk) {
             print_time(timer, "after shrinking");
         }
-
+        if (ran_out_of_time(ctimer)) {
+            break;
+        }
         // Label reduction (before merging)
         if (label_reduction && label_reduction->reduce_before_merging()) {
             bool reduced = label_reduction->reduce(merge_indices, fts, verbosity);
@@ -280,7 +312,9 @@ int MergeAndShrinkHeuristic::main_loop(
                 print_time(timer, "after label reduction");
             }
         }
-
+        if (ran_out_of_time(ctimer)) {
+            break;
+        }
         // Merging
         int merged_index = fts.merge(merge_index1, merge_index2, verbosity);
         int abs_size = fts.get_ts(merged_index).get_size();
@@ -294,7 +328,9 @@ int MergeAndShrinkHeuristic::main_loop(
             }
             print_time(timer, "after merging");
         }
-
+        if (ran_out_of_time(ctimer)) {
+            break;
+        }
         // Pruning
         if (prune_unreachable_states || prune_irrelevant_states) {
             bool pruned = prune_step(
@@ -325,7 +361,9 @@ int MergeAndShrinkHeuristic::main_loop(
             final_index = merged_index;
             break;
         }
-
+        if (ran_out_of_time(ctimer)) {
+            break;
+        }
         // End-of-iteration output.
         if (verbosity >= Verbosity::VERBOSE) {
             report_peak_memory_delta();
@@ -656,6 +694,17 @@ static shared_ptr<Heuristic> _parse(OptionParser &parser) {
 
     parser.add_option<bool>("use_cost_bound",
 			    "Use or ignore passed in secondary cost bound", "true");
+
+    parser.add_option<double>(
+        "main_loop_max_time",
+        "A limit in seconds on the runtime of the main loop of the algorithm. "
+        "If the limit is exceeded, the algorithm terminates, potentially "
+        "returning a factored transition system with several factors. Also "
+        "note that the time limit is only checked between transformations "
+        "of the main loop, but not during, so it can be exceeded if a "
+        "transformation is runtime-intense.",
+        "infinity",
+        Bounds("0.0", "infinity"));
 
     Options opts = parser.parse();
     if (parser.help_mode()) {

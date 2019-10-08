@@ -6,6 +6,7 @@
 #include <memory>
 
 namespace utils {
+class CountdownTimer;
 class Timer;
 }
 
@@ -40,6 +41,8 @@ class MergeAndShrinkHeuristic : public Heuristic {
     const bool prune_irrelevant_states;
 
     const Verbosity verbosity;
+    const double main_loop_max_time;
+
     long starting_peak_memory;
     // The final merge-and-shrink representation, storing goal distances.
     std::unique_ptr<MergeAndShrinkRepresentation> mas_representation;
@@ -54,6 +57,7 @@ class MergeAndShrinkHeuristic : public Heuristic {
     void report_peak_memory_delta(bool final = false) const;
     void dump_options() const;
     void warn_on_unusual_options() const;
+    bool ran_out_of_time(const utils::CountdownTimer &timer) const;
 
     bool use_cost_bound;
 
