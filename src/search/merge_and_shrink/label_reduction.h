@@ -16,6 +16,7 @@ class Options;
 
 namespace utils {
 class RandomNumberGenerator;
+class CountdownTimer;
 }
 
 namespace merge_and_shrink {
@@ -60,6 +61,7 @@ class LabelReduction {
     LabelReductionMethod lr_method;
     LabelReductionSystemOrder lr_system_order;
     std::shared_ptr<utils::RandomNumberGenerator> rng;
+    bool ran_out_of_time(Verbosity verbosity, const utils::CountdownTimer &timer) const;
 
     bool initialized() const;
     /* Apply the given label equivalence relation to the set of labels and
@@ -80,7 +82,7 @@ public:
     bool reduce(
         const std::pair<int, int> &next_merge,
         FactoredTransitionSystem &fts,
-        Verbosity verbosity) const;
+        Verbosity verbosity, utils::CountdownTimer ctimer) const;
     void dump_options() const;
     bool reduce_before_shrinking() const {
         return lr_before_shrinking;

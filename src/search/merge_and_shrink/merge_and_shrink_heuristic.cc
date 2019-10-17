@@ -281,7 +281,10 @@ int MergeAndShrinkHeuristic::main_loop(
 
         // Label reduction (before shrinking)
         if (label_reduction && label_reduction->reduce_before_shrinking()) {
-            bool reduced = label_reduction->reduce(merge_indices, fts, verbosity);
+            bool reduced = label_reduction->reduce(merge_indices, fts, verbosity, ctimer);
+            if (ran_out_of_time(ctimer)) {
+                break;
+            }
             if (verbosity >= Verbosity::NORMAL && reduced) {
                 print_time(timer, "after label reduction");
             }
@@ -307,7 +310,10 @@ int MergeAndShrinkHeuristic::main_loop(
         }
         // Label reduction (before merging)
         if (label_reduction && label_reduction->reduce_before_merging()) {
-            bool reduced = label_reduction->reduce(merge_indices, fts, verbosity);
+            bool reduced = label_reduction->reduce(merge_indices, fts, verbosity, ctimer);
+            if (ran_out_of_time(ctimer)) {
+                break;
+            }
             if (verbosity >= Verbosity::NORMAL && reduced) {
                 print_time(timer, "after label reduction");
             }
