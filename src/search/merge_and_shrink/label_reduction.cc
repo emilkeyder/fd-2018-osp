@@ -12,6 +12,7 @@
 
 #include "../algorithms/equivalence_relation.h"
 #include "../utils/collections.h"
+#include "../utils/countdown_timer.h"
 #include "../utils/markup.h"
 #include "../utils/rng.h"
 #include "../utils/rng_options.h"
@@ -117,6 +118,18 @@ void LabelReduction::compute_label_mapping(
     }
 }
 
+bool LabelReduction::ran_out_of_time(Verbosity verbosity,
+    const utils::CountdownTimer &timer) const {
+    if (timer.is_expired()) {
+        if (verbosity >= Verbosity::NORMAL) {
+            cout << "Ran out of time, stopping computation." << endl;
+            cout << endl;
+        }
+        return true;
+    }
+    return false;
+}
+
 equivalence_relation::EquivalenceRelation
 *LabelReduction::compute_combinable_equivalence_relation(
     int ts_index,
@@ -156,12 +169,12 @@ equivalence_relation::EquivalenceRelation
 bool LabelReduction::reduce(
     const pair<int, int> &next_merge,
     FactoredTransitionSystem &fts,
-    Verbosity verbosity) const {
+    Verbosity verbosity, utils::CountdownTimer ctimer) const {
     assert(initialized());
     assert(reduce_before_shrinking() || reduce_before_merging());
     int num_transition_systems = fts.get_size();
 
-    if (lr_method == TWO_TRANSITION_SYSTEMS) {
+    if (lr_method == TWO_TRANSITION_SYSTEMS) { 
         /*
            Note:
            We compute the combinable relation for labels for the two transition
@@ -176,12 +189,21 @@ bool LabelReduction::reduce(
         bool reduced = false;
         equivalence_relation::EquivalenceRelation *relation =
             compute_combinable_equivalence_relation(next_merge.first, fts);
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
         vector<pair<int, vector<int>>> label_mapping;
         compute_label_mapping(relation, fts, label_mapping, verbosity);
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
         if (!label_mapping.empty()) {
             fts.apply_label_mapping(label_mapping, next_merge.first);
             reduced = true;
         }
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
         delete relation;
         relation = 0;
         utils::release_vector_memory(label_mapping);
@@ -189,7 +211,13 @@ bool LabelReduction::reduce(
         relation = compute_combinable_equivalence_relation(
             next_merge.second,
             fts);
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
         compute_label_mapping(relation, fts, label_mapping, verbosity);
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
         if (!label_mapping.empty()) {
             fts.apply_label_mapping(label_mapping, next_merge.second);
             reduced = true;
@@ -237,9 +265,15 @@ bool LabelReduction::reduce(
         if (fts.is_active(ts_index)) {
             equivalence_relation::EquivalenceRelation *relation =
                 compute_combinable_equivalence_relation(ts_index, fts);
+            if (ran_out_of_time(verbosity, ctimer)) {
+                return reduced;
+            }            
             compute_label_mapping(relation, fts, label_mapping, verbosity);
             delete relation;
         }
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
 
         if (label_mapping.empty()) {
             /*
@@ -255,6 +289,10 @@ bool LabelReduction::reduce(
             num_unsuccessful_iterations = 1;
             fts.apply_label_mapping(label_mapping, ts_index);
         }
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
+
         if (num_unsuccessful_iterations == num_transition_systems) {
             // See comment for the loop and its exit conditions.
             break;
@@ -270,6 +308,9 @@ bool LabelReduction::reduce(
                 tso_index = 0;
             }
         }
+        if (ran_out_of_time(verbosity, ctimer)) {
+            return reduced;
+        }            
     }
     return reduced;
 }
