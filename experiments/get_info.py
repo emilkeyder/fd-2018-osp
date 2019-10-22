@@ -33,4 +33,5 @@ def get_static_properties(filename):
     return os.path.join(dirpath, "static-properties")
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    with open(sys.argv[1], "r") as f:
+        main(f.readlines())
