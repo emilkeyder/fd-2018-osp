@@ -2,10 +2,10 @@
 
 import sys, os, json
 
-def get_domain_problem(filename):
+def get_static_info(filename):
     with open(filename, "r") as s:
         data = json.load(s)
-        return data['domain'], data['problem']
+        return data['domain'], data['problem'], data['algorithm']
 
 
 def get_init_value(filename):
@@ -19,10 +19,10 @@ def get_init_value(filename):
 def main(files):
     for fl in files:
         static = get_static_properties(fl)
-        domain, problem = get_domain_problem(static)
+        domain, problem, alg = get_static_info(static)
         prop = get_properties(fl)
         init = get_init_value(prop)
-        print("%s, %s, %s" % (domain, problem, init))
+        print("%s, %s, %s, %s" % (domain, problem, alg, init))
 
 def get_properties(filename):
     dirpath = os.path.dirname(os.path.abspath(filename))
