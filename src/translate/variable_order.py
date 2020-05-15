@@ -96,11 +96,13 @@ class CausalGraph(object):
             else:
                 self.ordering.append(scc[0])
 
-    def calculate_important_vars(self, utility):
+    def calculate_important_vars(self, goal, utility):
         # Note for future refactoring: it is perhaps more idiomatic
         # and efficient to use a set rather than a defaultdict(bool).
         necessary = defaultdict(bool)
-        for var, _, _ in utility.triplets:
+	goal_vars = [var for var, _ in goal.pairs]
+	util_vars = [var for var, _, _ in utility.triplets]
+        for var in set().union(goal_vars, util_vars):
             if not necessary[var]:
                 necessary[var] = True
                 self.dfs(var, necessary)
@@ -353,7 +355,7 @@ def find_and_apply_variable_order(sas_task, reorder_vars=True,
         else:
             order = list(range(len(sas_task.variables.ranges)))
         if filter_unimportant_vars:
-            necessary = cg.calculate_important_vars(sas_task.utility)
+            necessary = cg.calculate_important_vars(sas_task.goal, sas_task.utility)
             print("%s of %s variables necessary." % (len(necessary),
                                                      len(order)))
             order = [var for var in order if necessary[var]]

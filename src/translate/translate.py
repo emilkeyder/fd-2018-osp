@@ -614,9 +614,9 @@ def pddl_to_sas(task):
             except simplify.TriviallySolvable:
                 return solvable_sas_task("Simplified to empty goal")
 
-    filter_unimportant_vars = options.filter_unimportant_vars    
-    if isinstance(task.goal, pddl.Truth):
-        filter_unimportant_vars = False
+    #filter_unimportant_vars = options.filter_unimportant_vars    
+    #if isinstance(task.goal, pddl.Truth):
+    #    filter_unimportant_vars = False
 
 
     if options.reorder_variables or options.filter_unimportant_vars:
