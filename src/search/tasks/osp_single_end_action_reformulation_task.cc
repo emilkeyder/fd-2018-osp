@@ -188,9 +188,9 @@ namespace extra_tasks {
   }
 
   FactPair OSPSingleEndActionReformulationTask::get_goal_fact(int index) const {
-    return index < parent->get_num_goals()
-      ? parent->get_goal_fact(index)
-      : FactPair(get_sg_variable_index(), get_sg_variable_domain_size() - 1);
+    assert(index == 0);
+    (void) index;
+    return FactPair(get_sg_variable_index(), get_sg_variable_domain_size() - 1);
   }
 
   std::vector<int> OSPSingleEndActionReformulationTask::get_initial_state_values() const {
