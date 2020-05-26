@@ -79,12 +79,11 @@ def get_orig_domain_prob(folder):
 
 
 def print_attention(domain, problem, ret):
-    print("ATTENTION: %s %s [%s %s %s %s %s]" % (domain, problem, ret[domain][problem]['100'], ret[domain][problem]['125'], ret[domain][problem]['150'], ret[domain][problem]['175'], ret[domain][problem]['200']))
+    print("ATTENTION: %s %s [%s %s %s %s %s]" % (domain, problem, ret[domain][problem].get('100'), ret[domain][problem].get('125'), ret[domain][problem].get('150'), ret[domain][problem].get('175'), ret[domain][problem].get('200')))
 
 
 def print_reg(domain, problem, ret):
-    print("REGULAR: %s %s [%s %s %s %s %s]" % (domain, problem, ret[domain][problem]['100'], ret[domain][problem]['125'], ret[domain][problem]['150'], ret[domain][problem]['175'], ret[domain][problem]['200']))
-
+    print("REGULAR: %s %s [%s %s %s %s %s]" % (domain, problem, ret[domain][problem].get('100'), ret[domain][problem].get('125'), ret[domain][problem].get('150'), ret[domain][problem].get('175'), ret[domain][problem].get('200')))
 
 def main(folder):
     ret = {}
