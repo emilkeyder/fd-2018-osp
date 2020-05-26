@@ -92,6 +92,7 @@ def main(folder):
         if os.path.isfile(sas_file):
             domain, problem = get_domain_problem(f)
             bound = get_domain_bound(domain)
+            domain = get_orig_domain(domain)
             plan_util = get_plan_util(f)
             if domain not in ret:
                 ret[domain] = {}
