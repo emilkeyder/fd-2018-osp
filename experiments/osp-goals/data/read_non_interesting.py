@@ -27,6 +27,11 @@ def get_orig_domain(name):
         return name[0:-4] 
     return None
 
+def get_domain_bound(name):
+    if name.endswith('-100') or name.endswith('-125') or name.endswith('-150') or name.endswith('-175') or name.endswith('-200'):
+        return name[-3:] 
+    return None
+
 def get_num_plans(folder):
 
     import fnmatch
@@ -73,13 +78,41 @@ def get_orig_domain_prob(folder):
     return get_orig_domain_file_name(domain), os.path.join(orig_domain, orig_problem)
 
 
+def print_attention(domain, problem, ret):
+    print("ATTENTION: %s %s [%s %s %s %s %s]" % (domain, problem, ret[domain][problem]['100'], ret[domain][problem]['125'], ret[domain][problem]['150'], ret[domain][problem]['175'], ret[domain][problem]['200']))
+
+
+def print_reg(domain, problem, ret):
+    print("REGULAR: %s %s [%s %s %s %s %s]" % (domain, problem, ret[domain][problem]['100'], ret[domain][problem]['125'], ret[domain][problem]['150'], ret[domain][problem]['175'], ret[domain][problem]['200']))
+
+
 def main(folder):
+    ret = {}
     for f in glob.glob(os.path.join(folder, "runs-*", "*")):
         sas_file = os.path.join(f, 'sas_plan')
         if os.path.isfile(sas_file):
-            if not is_interesting(f):
-                domain, problem = get_domain_problem(f)
+            domain, problem = get_domain_problem(f)
+            bound = get_domain_bound(domain)
+            plan_util = get_plan_util(f)
+            if domain not in ret:
+                ret[domain] = {}
+            if problem not in ret[domain]:
+                ret[domain][problem] = {}
+            if bound not in ret[domain][problem]:
+                ret[domain][problem][bound] = plan_util
+
+    
+    for domain in ret:
+        for problem in ret[domain]:
+            bounds = ret[domain][problem].values()
+            if max(bounds) == 0 and len(bounds) == 5:
                 print("NOT INTERESTING: %s %s" % (domain, problem))
+            elif min(bounds) == 0:
+                print_attention(domain, problem, ret)
+            else
+                print_reg(domain, problem, ret)
+
+    if not is_interesting(f):
 
 if __name__ == "__main__":
     main(sys.argv[1])
