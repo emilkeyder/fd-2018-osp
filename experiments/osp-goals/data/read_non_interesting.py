@@ -109,7 +109,7 @@ def main(folder):
                 print("NOT INTERESTING: %s %s" % (domain, problem))
             elif min(bounds) == 0:
                 print_attention(domain, problem, ret)
-            else
+            else:
                 print_reg(domain, problem, ret)
 
     if not is_interesting(f):
