@@ -112,8 +112,6 @@ def main(folder):
             else:
                 print_reg(domain, problem, ret)
 
-    if not is_interesting(f):
-
 if __name__ == "__main__":
     main(sys.argv[1])
 
