@@ -19,10 +19,10 @@ namespace extra_tasks {
       end_operator.preconditions.push_back(parent->get_goal_fact(i));
     }
 
-    for (int var = 0; var < parent->get_num_variables(); ++var) {
-      end_operator.effects.push_back(FactPair(var, parent->get_initial_state_values()[var]));
-      // end_operator.effects.push_back(FactPair(var, 0));
-    }
+    // for (int var = 0; var < parent->get_num_variables(); ++var) {
+    //   end_operator.effects.push_back(FactPair(var, parent->get_initial_state_values()[var]));
+    //   // end_operator.effects.push_back(FactPair(var, 0));
+    // }
 
     end_operator.effects.push_back(FactPair(get_sg_variable_index(),
 					    get_sg_variable_domain_size() - 1));
