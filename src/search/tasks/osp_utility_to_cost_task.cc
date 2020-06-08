@@ -103,6 +103,12 @@ int OSPUtilityToCostTask::get_operator_cost(int index, bool is_axiom) const {
                : sg_operators[index - (parent->get_num_operators() - 1)].cost;
 }
 
+int OSPUtilityToCostTask::get_operator_cost(int index, bool is_axiom,
+                                                           const GlobalState &state) const {
+    (void)state;
+    return get_operator_cost(index, is_axiom);
+}
+
 string OSPUtilityToCostTask::get_operator_name(int index, bool is_axiom) const {
     return index < parent->get_num_operators() - 1
                ? parent->get_operator_name(index, is_axiom)
