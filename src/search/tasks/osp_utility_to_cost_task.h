@@ -12,12 +12,12 @@ namespace extra_tasks {
 // assume an OSPSingleEndActionReformulationTask where the END action
 // is the last operator.
 class OSPUtilityToCostTask : public tasks::DelegatingTask {
-  protected:
+protected:
     struct ExplicitOperator {
-      std::vector<FactPair> preconditions;
-      std::vector<FactPair> effects;
-      int cost = 0;
-      std::string name;
+        std::vector<FactPair> preconditions;
+        std::vector<FactPair> effects;
+        int cost = 0;
+        std::string name;
     };
 
     const int NOT_AN_AXIOM = -1;
@@ -25,15 +25,15 @@ class OSPUtilityToCostTask : public tasks::DelegatingTask {
     std::vector<ExplicitOperator> sg_operators;
 
     int get_sg_variable_index() const {
-      // The SG variable is expected to already be present in the parent task.
-      return parent->get_num_variables() - 1;
+        // The SG variable is expected to already be present in the parent task.
+        return parent->get_num_variables() - 1;
     }
 
     int get_sg_variable_domain_size() const {
-      return get_utilities_map().size() + 1;
+        return get_utilities_map().size() + 1;
     }
 
-  public:
+public:
     OSPUtilityToCostTask(const std::shared_ptr<AbstractTask> &parent);
     virtual ~OSPUtilityToCostTask() override = default;
 
