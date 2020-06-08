@@ -185,13 +185,13 @@ FactPair OSPSingleEndActionReformulationTask::get_operator_effect(
 }
 
 int OSPSingleEndActionReformulationTask::get_num_goals() const {
-    return 1;
+    return parent->get_num_goals() + 1;
 }
 
 FactPair OSPSingleEndActionReformulationTask::get_goal_fact(int index) const {
-    assert(index == 0);
-    (void)index;
-    return FactPair(get_sg_variable_index(), get_sg_variable_domain_size() - 1);
+    return index < parent->get_num_goals()
+               ? parent->get_goal_fact(index)
+               : FactPair(get_sg_variable_index(), get_sg_variable_domain_size() - 1);
 }
 
 std::vector<int> OSPSingleEndActionReformulationTask::get_initial_state_values() const {

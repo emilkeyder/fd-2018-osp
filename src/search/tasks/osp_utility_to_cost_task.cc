@@ -158,6 +158,14 @@ FactPair OSPUtilityToCostTask::get_operator_effect(
                : sg_operators[op_index - (parent->get_num_operators() - 1)].effects[eff_index];
 }
 
+
+FactPair OSPUtilityToCostTask::get_goal_fact(int index) const {
+    return index < parent->get_num_goals() - 1
+               ? parent->get_goal_fact(index)
+               : FactPair(get_sg_variable_index(), get_sg_variable_domain_size() - 1);
+}
+
+
 static shared_ptr<AbstractTask> _parse(OptionParser &parser) {
     parser.document_synopsis(
         "Utility to cost compilation",

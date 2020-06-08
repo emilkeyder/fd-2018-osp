@@ -50,6 +50,7 @@ public:
         int op_index, int eff_index, int cond_index, bool is_axiom) const override;
     virtual FactPair get_operator_effect(
         int op_index, int eff_index, bool is_axiom) const override;
+    virtual FactPair get_goal_fact(int index) const override;
 };
 
 }

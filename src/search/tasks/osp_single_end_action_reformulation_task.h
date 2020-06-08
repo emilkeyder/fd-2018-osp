@@ -30,7 +30,7 @@ protected:
     }
 
     int get_sg_variable_domain_size() const {
-        return get_utilities_map().size() + 1;
+        return 2;
     }
 
 public:
