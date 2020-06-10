@@ -38,6 +38,7 @@ public:
     virtual ~OSPUtilityToCostTask() override = default;
 
     virtual int get_operator_cost(int index, bool is_axiom) const override;
+    virtual int get_operator_cost(int index, bool is_axiom, const GlobalState& state) const override;    
     virtual std::string get_operator_name(int index, bool is_axiom) const override;
     virtual int get_num_operators() const override;
     virtual int get_num_operator_preconditions(int index, bool is_axiom) const override;
@@ -50,6 +51,7 @@ public:
         int op_index, int eff_index, int cond_index, bool is_axiom) const override;
     virtual FactPair get_operator_effect(
         int op_index, int eff_index, bool is_axiom) const override;
+    virtual FactPair get_goal_fact(int index) const override;
 };
 
 }

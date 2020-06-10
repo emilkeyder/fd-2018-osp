@@ -103,6 +103,12 @@ int OSPUtilityToCostTask::get_operator_cost(int index, bool is_axiom) const {
                : sg_operators[index - (parent->get_num_operators() - 1)].cost;
 }
 
+int OSPUtilityToCostTask::get_operator_cost(int index, bool is_axiom,
+                                                           const GlobalState &state) const {
+    (void)state;
+    return get_operator_cost(index, is_axiom);
+}
+
 string OSPUtilityToCostTask::get_operator_name(int index, bool is_axiom) const {
     return index < parent->get_num_operators() - 1
                ? parent->get_operator_name(index, is_axiom)
@@ -157,6 +163,14 @@ FactPair OSPUtilityToCostTask::get_operator_effect(
                ? parent->get_operator_effect(op_index, eff_index, is_axiom)
                : sg_operators[op_index - (parent->get_num_operators() - 1)].effects[eff_index];
 }
+
+
+FactPair OSPUtilityToCostTask::get_goal_fact(int index) const {
+    return index < parent->get_num_goals() - 1
+               ? parent->get_goal_fact(index)
+               : FactPair(get_sg_variable_index(), get_sg_variable_domain_size() - 1);
+}
+
 
 static shared_ptr<AbstractTask> _parse(OptionParser &parser) {
     parser.document_synopsis(
