@@ -1,5 +1,5 @@
-#ifndef TASKS_OSP_UTILITY_TO_COST_TASK_H
-#define TASKS_OSP_UTILITY_TO_COST_TASK_H
+#ifndef TASKS_OSP_DIRECT_UTILITY_TO_COST_TASK_H
+#define TASKS_OSP_DIRECT_UTILITY_TO_COST_TASK_H
 
 #include "delegating_task.h"
 
@@ -11,7 +11,7 @@ namespace extra_tasks {
 // HACK: Inheritance here appears to be generic but it is not. We
 // assume an OSPSingleEndActionReformulationTask where the END action
 // is the last operator.
-class OSPUtilityToCostTask : public tasks::DelegatingTask {
+class OSPDirectUtilityToCostTask : public tasks::DelegatingTask {
 protected:
     struct ExplicitOperator {
         std::vector<FactPair> preconditions;
@@ -26,7 +26,7 @@ protected:
 
     int get_sg_variable_index() const {
         // The SG variable is expected to already be present in the parent task.
-        return parent->get_num_variables() - 1;
+        return parent->get_num_variables() ;
     }
 
     int get_sg_variable_domain_size() const {
@@ -34,8 +34,18 @@ protected:
     }
 
 public:
-    OSPUtilityToCostTask(const std::shared_ptr<AbstractTask> &parent);
-    virtual ~OSPUtilityToCostTask() override = default;
+    OSPDirectUtilityToCostTask(const std::shared_ptr<AbstractTask> &parent);
+    virtual ~OSPDirectUtilityToCostTask() override = default;
+
+
+    int get_num_variables() const override;
+    std::string get_variable_name(int var) const override;
+    int get_variable_domain_size(int var) const override;
+    virtual int get_variable_axiom_layer(int var) const override;
+    virtual int get_variable_default_axiom_value(int var) const override;
+    virtual std::string get_fact_name(const FactPair &fact) const override;
+    virtual bool are_facts_mutex(
+        const FactPair &fact1, const FactPair &fact2) const override;
 
     virtual int get_operator_cost(int index, bool is_axiom) const override;
     virtual int get_operator_cost(int index, bool is_axiom, const GlobalState& state) const override;    
@@ -51,9 +61,11 @@ public:
         int op_index, int eff_index, int cond_index, bool is_axiom) const override;
     virtual FactPair get_operator_effect(
         int op_index, int eff_index, bool is_axiom) const override;
+    virtual int get_num_goals() const override;
     virtual FactPair get_goal_fact(int index) const override;
 
     virtual int get_bounded_operator_cost(int index, bool is_axiom) const override;
+    virtual std::vector<int> get_initial_state_values() const override;
 
 };
 

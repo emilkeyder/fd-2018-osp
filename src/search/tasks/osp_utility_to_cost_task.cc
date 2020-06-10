@@ -164,6 +164,11 @@ FactPair OSPUtilityToCostTask::get_operator_effect(
                : sg_operators[op_index - (parent->get_num_operators() - 1)].effects[eff_index];
 }
 
+int OSPUtilityToCostTask::get_bounded_operator_cost(int index, bool is_axiom) const {
+    return index < parent->get_num_operators() - 1
+               ? parent->get_operator_cost(index, is_axiom)
+               : 0;
+}
 
 FactPair OSPUtilityToCostTask::get_goal_fact(int index) const {
     return index < parent->get_num_goals() - 1
