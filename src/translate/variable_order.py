@@ -100,8 +100,8 @@ class CausalGraph(object):
         # Note for future refactoring: it is perhaps more idiomatic
         # and efficient to use a set rather than a defaultdict(bool).
         necessary = defaultdict(bool)
-	goal_vars = [var for var, _ in goal.pairs]
-	util_vars = [var for var, _, _ in utility.triplets]
+        goal_vars = [var for var, _ in goal.pairs]
+        util_vars = [var for var, _, _ in utility.triplets]
         for var in set().union(goal_vars, util_vars):
             if not necessary[var]:
                 necessary[var] = True
