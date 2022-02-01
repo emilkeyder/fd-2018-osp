@@ -37,9 +37,9 @@ public:
     OSPSingleEndActionReformulationTask(const std::shared_ptr<AbstractTask> &parent);
     virtual ~OSPSingleEndActionReformulationTask() override = default;
 
-    int get_num_variables() const override;
-    std::string get_variable_name(int var) const override;
-    int get_variable_domain_size(int var) const override;
+    virtual int get_num_variables() const override;
+    virtual std::string get_variable_name(int var) const override;
+    virtual int get_variable_domain_size(int var) const override;
     virtual int get_variable_axiom_layer(int var) const override;
     virtual int get_variable_default_axiom_value(int var) const override;
     virtual std::string get_fact_name(const FactPair &fact) const override;

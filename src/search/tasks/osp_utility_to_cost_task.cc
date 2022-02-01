@@ -54,7 +54,7 @@ OSPUtilityToCostTask::OSPUtilityToCostTask(const shared_ptr<AbstractTask> &paren
 
             sg_operators.emplace_back();
             sg_operators.back().preconditions.push_back(FactPair(get_sg_variable_index(), sg_index));
-            sg_operators.back().name = "account-sg-no-util";
+            sg_operators.back().name = "account-sg-" + std::to_string(sg_index) + "-no-util";
             sg_operators.back().effects.push_back(FactPair(get_sg_variable_index(), sg_index + 1));
             sg_operators.back().cost = max_utility;
             break;
@@ -94,6 +94,22 @@ OSPUtilityToCostTask::OSPUtilityToCostTask(const shared_ptr<AbstractTask> &paren
         cout << endl << endl;
     }
     */
+}
+
+int OSPUtilityToCostTask::get_variable_domain_size(int var) const {
+    return var < parent->get_num_variables() - 1 ? parent->get_variable_domain_size(var) : get_sg_variable_domain_size();
+}
+
+string OSPUtilityToCostTask::get_fact_name(const FactPair &fact) const {
+    if (fact.var < parent->get_num_variables() - 1) {
+        return parent->get_fact_name(fact);
+    }
+
+    if (fact.value == 0)
+        return "sg-init";
+    if (fact.value == get_sg_variable_domain_size() - 1)
+        return "sg-goal";
+    return ("sg-index-" + std::to_string(fact.value));
 }
 
 int OSPUtilityToCostTask::get_operator_cost(int index, bool is_axiom) const {

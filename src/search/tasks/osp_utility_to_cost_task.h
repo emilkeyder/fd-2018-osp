@@ -37,6 +37,9 @@ public:
     OSPUtilityToCostTask(const std::shared_ptr<AbstractTask> &parent);
     virtual ~OSPUtilityToCostTask() override = default;
 
+    virtual int get_variable_domain_size(int var) const override;
+    virtual std::string get_fact_name(const FactPair &fact) const override;
+
     virtual int get_operator_cost(int index, bool is_axiom) const override;
     virtual int get_operator_cost(int index, bool is_axiom, const GlobalState& state) const override;    
     virtual std::string get_operator_name(int index, bool is_axiom) const override;
