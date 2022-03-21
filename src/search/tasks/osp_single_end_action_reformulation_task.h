@@ -9,12 +9,12 @@
 namespace extra_tasks {
 
 class OSPSingleEndActionReformulationTask : public tasks::DelegatingTask {
-  protected:
+protected:
     struct ExplicitOperator {
-      std::vector<FactPair> preconditions;
-      std::vector<FactPair> effects;
-      int cost = 0;
-      std::string name;
+        std::vector<FactPair> preconditions;
+        std::vector<FactPair> effects;
+        int cost = 0;
+        std::string name;
     };
 
 
@@ -26,14 +26,14 @@ class OSPSingleEndActionReformulationTask : public tasks::DelegatingTask {
     const int NOT_AN_AXIOM = -1;
 
     int get_sg_variable_index() const {
-      return parent->get_num_variables();
+        return parent->get_num_variables();
     }
 
     int get_sg_variable_domain_size() const {
-      return get_utilities_map().size() + 1;
+        return 2;
     }
 
-  public:
+public:
     OSPSingleEndActionReformulationTask(const std::shared_ptr<AbstractTask> &parent);
     virtual ~OSPSingleEndActionReformulationTask() override = default;
 

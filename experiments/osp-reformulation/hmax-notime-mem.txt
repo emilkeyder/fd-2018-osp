@@ -1,0 +1,5 @@
+data/2019-02-16-tr-adapted-search-hmax/runs-03801-03900/03831/run.log
+data/2019-02-16-tr-adapted-search-hmax/runs-10401-10500/10439/run.log
+data/2019-02-16-tr-adapted-search-hmax/runs-10401-10500/10469/run.log
+data/2019-02-16-tr-adapted-search-hmax/runs-10401-10500/10499/run.log
+data/2019-02-16-tr-adapted-search-hmax/runs-11401-11500/11412/run.log
